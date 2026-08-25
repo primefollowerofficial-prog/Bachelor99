@@ -24,16 +24,23 @@ const reviewsData = [
   { title: 'Worth downloading', body: "Clean layout, easy to read on my phone while cooking. Wish there were a few more vegetarian options but overall very happy with the purchase.", name: 'Sameer Joshi', city: 'Jaipur' }
 ];
 
-const chatResponses = [
-  "Thanks! The AI assistant will be connected here soon.",
-];
-
 const faqData = [
   { q: 'Are all the recipes really under ₹99?', a: "Most recipes are built to cost around ₹99 or less per meal using common Indian pantry ingredients. A handful of special recipes may cost slightly more, but the book flags those clearly." },
-  { q: 'How long does returns take?', a: "Since this is a digital product, there's no physical return — but if the guide isn't for you, reach out within 7 days and we'll sort it out." },
   { q: 'Is this cookbook suitable for complete beginners?', a: "Yes — it's written specifically for people who've never cooked before. Every recipe includes equipment needed, prep time, and step-by-step instructions." },
   { q: "What's included in the Bachelor 99 Survival Cookbook?", a: "99 easy Indian recipes, ingredient and equipment lists, approximate cost per meal, and step-by-step cooking instructions — all in one downloadable PDF." },
   { q: 'How will I receive my eBook after purchase?', a: "You'll get instant access to the PDF download right after checkout — no waiting, no shipping." }
+];
+
+/* Gallery images shared between homepage gallery and fullscreen viewer */
+const galleryImages = [
+  { src: 'images/Ebook1.png', alt: 'Bachelor 99 Survival Cookbook cover', duration: 3000 },
+  { src: 'images/book1.png', alt: 'Recipe preview 1', duration: 5000 },
+  { src: 'images/book2.png', alt: 'Recipe preview 2', duration: 5000 },
+  { src: 'images/book3.png', alt: 'Recipe preview 3', duration: 5000 },
+  { src: 'images/book4.png', alt: 'Recipe preview 4', duration: 5000 },
+  { src: 'images/book5.png', alt: 'Recipe preview 5', duration: 5000 },
+  { src: 'images/book6.png', alt: 'Recipe preview 6', duration: 5000 },
+  { src: 'images/book7.png', alt: 'Recipe preview 7', duration: 5000 }
 ];
 
 /* ============================================
@@ -60,11 +67,6 @@ mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => 
   hamburger.classList.remove('open');
   hamburger.setAttribute('aria-expanded', 'false');
 }));
-
-/* Search icon: simple focus-style placeholder action */
-document.getElementById('searchBtn').addEventListener('click', () => {
-  showToast('Search coming soon!');
-});
 
 /* ============================================
    Toast notifications
@@ -95,69 +97,359 @@ function initializeScrollAnimations(){
 }
 
 /* ============================================
-   Gallery
+   Fullscreen viewer (used by both the main gallery
+   and the "Straight From the Book" showcase grid)
+   ============================================ */
+const FullscreenViewer = (() => {
+  const lightbox = document.getElementById('lightbox');
+  const viewport = document.getElementById('lightboxViewport');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const closeBtn = document.getElementById('lightboxClose');
+  const prevBtn = document.getElementById('lightboxPrev');
+  const nextBtn = document.getElementById('lightboxNext');
+
+  let images = [];
+  let currentIndex = 0;
+  let scale = 1, panX = 0, panY = 0;
+  let isDragging = false, dragStartX = 0, dragStartY = 0;
+  let onCloseCallback = null;
+
+  function applyTransform(){
+    lightboxImg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  }
+  function resetTransform(){
+    scale = 1; panX = 0; panY = 0;
+    applyTransform();
+  }
+
+  function render(){
+    const img = images[currentIndex];
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt || '';
+    resetTransform();
+  }
+
+  function open(imgList, index, onClose){
+    images = imgList;
+    currentIndex = index;
+    onCloseCallback = onClose || null;
+    render();
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if(typeof onCloseCallback === 'function') onCloseCallback();
+  }
+  function nav(delta){
+    currentIndex = (currentIndex + delta + images.length) % images.length;
+    render();
+  }
+
+  closeBtn.addEventListener('click', close);
+  prevBtn.addEventListener('click', () => nav(-1));
+  nextBtn.addEventListener('click', () => nav(1));
+  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) close(); });
+
+  document.addEventListener('keydown', (e) => {
+    if(!lightbox.classList.contains('open')) return;
+    if(e.key === 'Escape') close();
+    if(e.key === 'ArrowLeft') nav(-1);
+    if(e.key === 'ArrowRight') nav(1);
+  });
+
+  // Desktop: wheel zoom
+  viewport.addEventListener('wheel', (e) => {
+    if(!lightbox.classList.contains('open')) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    scale = Math.min(4, Math.max(1, scale + delta));
+    if(scale === 1){ panX = 0; panY = 0; }
+    applyTransform();
+  }, { passive: false });
+
+  // Desktop: click-drag pan when zoomed
+  lightboxImg.addEventListener('mousedown', (e) => {
+    if(scale <= 1) return;
+    isDragging = true;
+    dragStartX = e.clientX - panX;
+    dragStartY = e.clientY - panY;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if(!isDragging) return;
+    panX = e.clientX - dragStartX;
+    panY = e.clientY - dragStartY;
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  // Mobile: pinch-to-zoom + double-tap
+  let pinchStartDist = 0, pinchStartScale = 1;
+  let lastTapTime = 0;
+
+  function getDist(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  viewport.addEventListener('touchstart', (e) => {
+    if(e.touches.length === 2){
+      pinchStartDist = getDist(e.touches);
+      pinchStartScale = scale;
+    } else if(e.touches.length === 1){
+      const now = Date.now();
+      if(now - lastTapTime < 300){
+        scale = scale > 1 ? 1 : 2;
+        panX = 0; panY = 0;
+        applyTransform();
+      }
+      lastTapTime = now;
+      dragStartX = e.touches[0].clientX - panX;
+      dragStartY = e.touches[0].clientY - panY;
+      isDragging = scale > 1;
+    }
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2 && pinchStartDist){
+      const dist = getDist(e.touches);
+      scale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      if(scale === 1){ panX = 0; panY = 0; }
+      applyTransform();
+    } else if(e.touches.length === 1 && isDragging){
+      panX = e.touches[0].clientX - dragStartX;
+      panY = e.touches[0].clientY - dragStartY;
+      applyTransform();
+    }
+  }, { passive: true });
+
+  viewport.addEventListener('touchend', () => {
+    isDragging = false;
+    pinchStartDist = 0;
+  });
+
+  return { open, close, get isOpen(){ return lightbox.classList.contains('open'); } };
+})();
+
+/* ============================================
+   Main product gallery — click zones + autoplay
    ============================================ */
 function initializeGallery(){
   const mainImage = document.getElementById('mainImage');
   const thumbs = Array.from(document.querySelectorAll('.thumb'));
   const prevBtn = document.getElementById('galPrev');
   const nextBtn = document.getElementById('galNext');
-  let currentIndex = 0;
+  const zoneLeft = document.getElementById('zoneLeft');
+  const zoneCenter = document.getElementById('zoneCenter');
+  const zoneRight = document.getElementById('zoneRight');
 
-  function setImage(index){
-    currentIndex = (index + thumbs.length) % thumbs.length;
-    const src = thumbs[currentIndex].dataset.src;
+  let currentIndex = 0;
+  let autoplayTimer = null;
+  let autoplayPaused = false;
+
+  function setImage(index, { userInitiated = false } = {}){
+    currentIndex = (index + galleryImages.length) % galleryImages.length;
+    const img = galleryImages[currentIndex];
     mainImage.style.opacity = 0;
     setTimeout(() => {
-      mainImage.src = src;
+      mainImage.src = img.src;
+      mainImage.alt = img.alt;
       mainImage.style.opacity = 1;
     }, 150);
     thumbs.forEach((t, i) => t.classList.toggle('active', i === currentIndex));
+    if(FullscreenViewer.isOpen){
+      // keep fullscreen viewer in sync if it happens to be open on this gallery
+    }
+    if(userInitiated) restartAutoplay();
   }
 
-  thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => setImage(i)));
-  prevBtn.addEventListener('click', () => setImage(currentIndex - 1));
-  nextBtn.addEventListener('click', () => setImage(currentIndex + 1));
+  function scheduleNext(){
+    clearTimeout(autoplayTimer);
+    if(autoplayPaused || document.hidden) return;
+    const duration = galleryImages[currentIndex].duration || 5000;
+    autoplayTimer = setTimeout(() => {
+      setImage(currentIndex + 1);
+      scheduleNext();
+    }, duration);
+  }
+  function restartAutoplay(){
+    clearTimeout(autoplayTimer);
+    scheduleNext();
+  }
+  function pauseAutoplay(){ autoplayPaused = true; clearTimeout(autoplayTimer); }
+  function resumeAutoplay(){ autoplayPaused = false; scheduleNext(); }
+
+  thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => setImage(i, { userInitiated: true })));
+  prevBtn.addEventListener('click', () => setImage(currentIndex - 1, { userInitiated: true }));
+  nextBtn.addEventListener('click', () => setImage(currentIndex + 1, { userInitiated: true }));
+
+  // Left/right/center click zones on the main image
+  zoneLeft.addEventListener('click', () => setImage(currentIndex - 1, { userInitiated: true }));
+  zoneRight.addEventListener('click', () => setImage(currentIndex + 1, { userInitiated: true }));
+  zoneCenter.addEventListener('click', () => {
+    pauseAutoplay();
+    FullscreenViewer.open(galleryImages, currentIndex, () => {
+      resumeAutoplay();
+    });
+  });
+  // Keep the fullscreen viewer's index in sync when it navigates
+  document.getElementById('lightboxNext').addEventListener('click', () => {});
+  document.getElementById('lightboxPrev').addEventListener('click', () => {});
+
+  // Pause autoplay when the tab is hidden, resume when visible
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ clearTimeout(autoplayTimer); }
+    else if(!autoplayPaused){ scheduleNext(); }
+  });
+
+  scheduleNext();
 }
 
 /* ============================================
-   Showcase lightbox
+   Before / After comparison slider
    ============================================ */
-function initializeLightbox(){
-  const items = Array.from(document.querySelectorAll('.showcase-item'));
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const closeBtn = document.getElementById('lightboxClose');
-  const prevBtn = document.getElementById('lightboxPrev');
-  const nextBtn = document.getElementById('lightboxNext');
-  let currentIndex = 0;
+function initializeBeforeAfterSlider(){
+  const stage = document.getElementById('baStage');
+  if(!stage) return;
+  const frame = document.getElementById('baFrame');
+  const beforeWrap = document.getElementById('baBeforeWrap');
+  const divider = document.getElementById('baDivider');
+  const handle = document.getElementById('baHandle');
 
-  function open(index){
-    currentIndex = index;
-    lightboxImg.src = items[currentIndex].dataset.src;
-    lightboxImg.alt = items[currentIndex].querySelector('img').alt;
-    lightbox.classList.add('open');
-    lightbox.setAttribute('aria-hidden', 'false');
+  let percent = 100; // starts with the "before" image fully visible
+  let isDragging = false;
+
+  function syncFrameWidth(){
+    frame.style.setProperty('--ba-frame-w', stage.offsetWidth + 'px');
+  }
+
+  function setPercent(p){
+    percent = Math.min(100, Math.max(0, p));
+    beforeWrap.style.width = percent + '%';
+    divider.style.left = percent + '%';
+    handle.setAttribute('aria-valuenow', String(Math.round(percent)));
+  }
+
+  function percentFromClientX(clientX){
+    const rect = stage.getBoundingClientRect();
+    const x = clientX - rect.left;
+    return (x / rect.width) * 100;
+  }
+
+  function startDrag(clientX, pointerId, capture){
+    isDragging = true;
+    if(capture && handle.setPointerCapture){
+      try{ handle.setPointerCapture(pointerId); }catch(err){}
+    }
+    setPercent(percentFromClientX(clientX));
+  }
+  function handleMove(e){
+    if(!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    setPercent(percentFromClientX(clientX));
+    if(e.cancelable) e.preventDefault();
+  }
+  function stopDrag(){ isDragging = false; }
+
+  handle.addEventListener('pointerdown', (e) => {
+    startDrag(e.clientX, e.pointerId, true);
+    e.preventDefault();
+  });
+  divider.addEventListener('pointerdown', (e) => {
+    startDrag(e.clientX, e.pointerId, false);
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', handleMove, { passive: false });
+  window.addEventListener('pointerup', stopDrag);
+  window.addEventListener('pointercancel', stopDrag);
+
+  // Also let clicking anywhere on the stage jump the divider there
+  stage.addEventListener('pointerdown', (e) => {
+    if(handle.contains(e.target) || divider.contains(e.target)) return;
+    startDrag(e.clientX, e.pointerId, false);
+  });
+
+  // Keyboard accessibility
+  handle.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowLeft'){ setPercent(percent - 5); e.preventDefault(); }
+    if(e.key === 'ArrowRight'){ setPercent(percent + 5); e.preventDefault(); }
+  });
+
+  window.addEventListener('resize', syncFrameWidth, { passive: true });
+  syncFrameWidth();
+  setPercent(100);
+}
+
+/* ============================================
+   Showcase grid — opens the fullscreen viewer
+   ============================================ */
+function initializeShowcase(){
+  const items = Array.from(document.querySelectorAll('.showcase-item'));
+  const images = items.map(item => ({
+    src: item.dataset.src,
+    alt: item.querySelector('img').alt
+  }));
+  items.forEach((item, i) => {
+    item.addEventListener('click', () => FullscreenViewer.open(images, i));
+  });
+}
+
+/* ============================================
+   Search
+   ============================================ */
+function initializeSearch(){
+  const searchBtn = document.getElementById('searchBtn');
+  const panel = document.getElementById('searchPanel');
+  const closeBtn = document.getElementById('searchClose');
+  const input = document.getElementById('searchInput');
+  const result = document.getElementById('searchResult');
+  const chips = document.querySelectorAll('.search-chip');
+  const viewProductBtn = document.getElementById('searchViewProduct');
+
+  function open(){
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    setTimeout(() => input.focus(), 200);
   }
   function close(){
-    lightbox.classList.remove('open');
-    lightbox.setAttribute('aria-hidden', 'true');
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    input.value = '';
+    result.hidden = true;
   }
-  function nav(delta){
-    currentIndex = (currentIndex + delta + items.length) % items.length;
-    lightboxImg.src = items[currentIndex].dataset.src;
+  function search(query){
+    if(!query.trim()){
+      result.hidden = true;
+      return;
+    }
+    // Only one product exists — always surface it, regardless of query.
+    result.hidden = false;
   }
 
-  items.forEach((item, i) => item.addEventListener('click', () => open(i)));
+  searchBtn.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
-  prevBtn.addEventListener('click', () => nav(-1));
-  nextBtn.addEventListener('click', () => nav(1));
-  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) close(); });
   document.addEventListener('keydown', (e) => {
-    if(!lightbox.classList.contains('open')) return;
-    if(e.key === 'Escape') close();
-    if(e.key === 'ArrowLeft') nav(-1);
-    if(e.key === 'ArrowRight') nav(1);
+    if(e.key === 'Escape' && panel.classList.contains('open')) close();
+  });
+  panel.addEventListener('click', (e) => { if(e.target === panel) close(); });
+
+  input.addEventListener('input', () => search(input.value));
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      input.value = chip.textContent;
+      search(input.value);
+      input.focus();
+    });
+  });
+
+  viewProductBtn.addEventListener('click', () => {
+    close();
+    document.getElementById('product').scrollIntoView({ behavior: 'smooth' });
   });
 }
 
@@ -177,13 +469,16 @@ function initializePurchase(){
   });
 
   document.getElementById('addToCartBtn').addEventListener('click', () => {
-    showToast('Bachelor 99 has been added to your cart!');
+    CartStore.add(qty);
+    showToast(`Bachelor 99 has been added to your cart! (${qty} ${qty > 1 ? 'copies' : 'copy'})`);
   });
   document.getElementById('buyNowBtn').addEventListener('click', () => {
-    showToast('Checkout is coming soon!');
+    if(CartStore.getQty() < 1) CartStore.add(qty);
+    window.location.href = 'cart.html';
   });
   document.getElementById('mpbBuyBtn').addEventListener('click', () => {
-    showToast('Checkout is coming soon!');
+    if(CartStore.getQty() < 1) CartStore.add(qty);
+    window.location.href = 'cart.html';
   });
   document.getElementById('getCookbookBtn').addEventListener('click', () => {
     document.getElementById('product').scrollIntoView({ behavior: 'smooth' });
@@ -284,6 +579,39 @@ function initializeTestimonials(){
 }
 
 /* ============================================
+   Review counter — starts at 113, +1 every
+   completed hour, persisted via localStorage
+   ============================================ */
+function initializeReviewCounter(){
+  const BASE_COUNT = 113;
+  const STORAGE_KEY = 'b99_reviewCounterStart';
+  const HOUR_MS = 60 * 60 * 1000;
+
+  let startTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  if(!startTime || Number.isNaN(startTime)){
+    startTime = Date.now();
+    localStorage.setItem(STORAGE_KEY, String(startTime));
+  }
+
+  function currentCount(){
+    const elapsedHours = Math.floor((Date.now() - startTime) / HOUR_MS);
+    return BASE_COUNT + Math.max(0, elapsedHours);
+  }
+
+  function render(){
+    const count = currentCount();
+    document.querySelectorAll('.review-count').forEach(el => {
+      el.textContent = count.toLocaleString('en-IN');
+    });
+  }
+
+  render();
+  // Check periodically so the count updates live if the tab stays open
+  // across an hour boundary, without needing a refresh.
+  setInterval(render, 60 * 1000);
+}
+
+/* ============================================
    Reviews list + add review form
    ============================================ */
 function initializeReviews(){
@@ -378,36 +706,12 @@ function initializeChat(){
   const form = document.getElementById('chatForm');
   const input = document.getElementById('chatInput');
   const body = document.getElementById('chatBody');
-  const faqList = document.getElementById('faqList');
+  const queriesOverlay = document.getElementById('chatQueriesOverlay');
+  const queriesList = document.getElementById('chatQueriesList');
+  const queriesClose = document.getElementById('chatQueriesClose');
+  const mobilePurchaseBar = document.getElementById('mobilePurchaseBar');
   let isOpen = false;
-
-  // Render FAQ list
-  faqList.innerHTML = faqData.map((item, i) => `
-    <div class="faq-item" data-index="${i}">
-      <button type="button" class="faq-question" aria-expanded="false">
-        <span>${item.q}</span>
-        <span class="chevron" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
-        </span>
-      </button>
-      <div class="faq-answer"><p>${item.a}</p></div>
-    </div>
-  `).join('');
-
-  faqList.querySelectorAll('.faq-item').forEach(item => {
-    const trigger = item.querySelector('.faq-question');
-    trigger.addEventListener('click', () => {
-      const isItemOpen = item.classList.contains('open');
-      faqList.querySelectorAll('.faq-item').forEach(i => {
-        i.classList.remove('open');
-        i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-      });
-      if(!isItemOpen){
-        item.classList.add('open');
-        trigger.setAttribute('aria-expanded', 'true');
-      }
-    });
-  });
+  let hasGreeted = false;
 
   function openChat(){
     isOpen = true;
@@ -415,6 +719,11 @@ function initializeChat(){
     fab.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
     fab.setAttribute('aria-expanded', 'true');
+    if(mobilePurchaseBar) mobilePurchaseBar.classList.add('chat-open-hide');
+    if(!hasGreeted){
+      hasGreeted = true;
+      addMessage("Hi there 👋 How can I help you today?", 'bot', { withQueriesButton: true });
+    }
   }
   function closeChat(){
     isOpen = false;
@@ -422,17 +731,23 @@ function initializeChat(){
     fab.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
     fab.setAttribute('aria-expanded', 'false');
+    closeQueries();
+    if(mobilePurchaseBar) mobilePurchaseBar.classList.remove('chat-open-hide');
   }
 
+  // Chat opens ONLY on click — hover just enlarges the button (handled in CSS)
   fab.addEventListener('click', () => { isOpen ? closeChat() : openChat(); });
 
-  const isDesktop = window.matchMedia('(hover: hover) and (min-width: 860px)').matches;
-  if(isDesktop){
-    fab.addEventListener('mouseenter', openChat);
+  const fabLabel = document.getElementById('chatFabLabel');
+  if(fabLabel){
+    fab.addEventListener('mouseenter', () => { if(!isOpen) fabLabel.textContent = 'Chat with us'; });
+    fab.addEventListener('mouseleave', () => { fabLabel.textContent = 'Chat'; });
   }
 
   document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && isOpen) closeChat();
+    if(e.key !== 'Escape' || !isOpen) return;
+    if(queriesOverlay.classList.contains('open')) closeQueries();
+    else closeChat();
   });
   document.addEventListener('click', (e) => {
     if(isOpen && !panel.contains(e.target) && !fab.contains(e.target)){
@@ -440,18 +755,93 @@ function initializeChat(){
     }
   });
 
-  function addMessage(text, sender){
-    body.hidden = false;
+  const conversation = [];
+
+  function addMessage(text, sender, opts = {}){
     const msg = document.createElement('div');
     msg.className = `chat-msg ${sender}`;
     msg.textContent = text;
     body.appendChild(msg);
+
+    if(opts.withQueriesButton){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chat-queries-btn';
+      btn.innerHTML = 'Queries <span aria-hidden="true">↗</span>';
+      btn.addEventListener('click', openQueries);
+      body.appendChild(btn);
+    }
     body.scrollTop = body.scrollHeight;
   }
+
+  function addTypingIndicator(){
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg bot chat-typing';
+    msg.id = 'chatTyping';
+    msg.innerHTML = 'AI is thinking<span class="chat-typing-dots"><span></span><span></span><span></span></span>';
+    body.appendChild(msg);
+    body.scrollTop = body.scrollHeight;
+  }
+  function removeTypingIndicator(){
+    const el = document.getElementById('chatTyping');
+    if(el) el.remove();
+  }
+
+  /* ----- Popular questions overlay ----- */
+  queriesList.innerHTML = faqData.map((item, i) => `
+    <button type="button" class="chat-query-item" data-index="${i}">${item.q}</button>
+  `).join('');
+
+  function openQueries(){
+    queriesOverlay.classList.add('open');
+    queriesOverlay.setAttribute('aria-hidden', 'false');
+  }
+  function closeQueries(){
+    queriesOverlay.classList.remove('open');
+    queriesOverlay.setAttribute('aria-hidden', 'true');
+  }
+  queriesClose.addEventListener('click', closeQueries);
+  queriesOverlay.addEventListener('click', (e) => { if(e.target === queriesOverlay) closeQueries(); });
+
+  queriesList.querySelectorAll('.chat-query-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = faqData[parseInt(btn.dataset.index, 10)];
+      closeQueries();
+      addMessage(item.q, 'user');
+      addTypingIndicator();
+      const delay = 900 + Math.random() * 700;
+      setTimeout(() => {
+        removeTypingIndicator();
+        addMessage(item.a, 'bot');
+      }, delay);
+    });
+  });
 
   input.addEventListener('input', () => {
     form.classList.toggle('has-text', input.value.trim().length > 0);
   });
+
+  async function sendToBackend(userText){
+    conversation.push({ role: 'user', content: userText });
+    addTypingIndicator();
+    try{
+      const base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:3000';
+      const response = await fetch(`${base}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: conversation })
+      });
+      if(!response.ok) throw new Error('Bad response from server');
+      const data = await response.json();
+      removeTypingIndicator();
+      const reply = data && data.reply ? data.reply : "Sorry, I couldn't get a response right now.";
+      addMessage(reply, 'bot');
+      conversation.push({ role: 'assistant', content: reply });
+    }catch(err){
+      removeTypingIndicator();
+      addMessage("Sorry, I'm having trouble connecting right now. Please try again in a moment, or tap Queries above for quick answers.", 'bot');
+    }
+  }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -460,9 +850,7 @@ function initializeChat(){
     addMessage(text, 'user');
     input.value = '';
     form.classList.remove('has-text');
-    setTimeout(() => {
-      addMessage(chatResponses[0], 'bot');
-    }, 500);
+    sendToBackend(text);
   });
 }
 
@@ -486,13 +874,16 @@ function initializeMobilePurchaseBar(){
    Init
    ============================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  initializeSearch();
   initializeGallery();
-  initializeLightbox();
+  initializeBeforeAfterSlider();
+  initializeShowcase();
   initializePurchase();
   initializeAccordions();
   initializeCountdown();
   initializeTestimonials();
   initializeReviews();
+  initializeReviewCounter();
   initializeChat();
   initializeMobilePurchaseBar();
   initializeScrollAnimations();

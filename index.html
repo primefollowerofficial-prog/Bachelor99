@@ -28,19 +28,16 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
       <a href="#top" class="nav-link">Home</a>
-      <a href="#product" class="nav-link">Catalog</a>
       <a href="#contact" class="nav-link">Contact</a>
     </div>
 
     <a href="#top" class="logo">Bachelor<span class="logo-accent">99</span></a>
 
     <div class="nav-right">
-      <button class="icon-btn" aria-label="Account">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      </button>
-      <button class="icon-btn" aria-label="Cart">
+      <a class="icon-btn cart-icon-btn" href="cart.html" aria-label="Cart" id="cartBtn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-      </button>
+        <span class="cart-badge" id="cartBadge" hidden>0</span>
+      </a>
       <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -48,9 +45,41 @@
   </div>
   <div class="mobile-menu" id="mobileMenu">
     <a href="#top">Home</a>
-    <a href="#product">Catalog</a>
     <a href="#reviews-full">Reviews</a>
     <a href="#contact">Contact</a>
+  </div>
+
+  <!-- Search panel -->
+  <div class="search-panel" id="searchPanel" aria-hidden="true">
+    <div class="search-panel-inner">
+      <div class="search-input-row">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Search recipes, cookbook, meals..." autocomplete="off">
+        <button class="search-close" id="searchClose" aria-label="Close search">✕</button>
+      </div>
+
+      <div class="search-result" id="searchResult" hidden>
+        <img src="images/Ebook1.png" alt="Bachelor 99 Survival Cookbook">
+        <div class="search-result-info">
+          <h4>Bachelor 99 Survival Cookbook</h4>
+          <div class="rating-row"><span class="stars">★★★★★</span><span class="rating-text">4.8 <span class="muted">(<span class="review-count">113</span> reviews)</span></span></div>
+          <div class="price-row"><span class="price-old">₹199</span><span class="price-new">₹99</span></div>
+          <p class="search-result-desc">99 simple, budget-friendly Indian recipes for bachelors, students and total beginners.</p>
+          <button class="btn btn-primary" id="searchViewProduct">View Product</button>
+        </div>
+      </div>
+
+      <div class="search-suggestions">
+        <p class="search-suggestions-label">Popular searches</p>
+        <div class="search-suggestions-list">
+          <button type="button" class="search-chip">99 recipe bachler's cook book</button>
+          <button type="button" class="search-chip">Bachelor recipes</button>
+          <button type="button" class="search-chip">Easy Indian meals</button>
+          <button type="button" class="search-chip">Budget recipes</button>
+          <button type="button" class="search-chip">Quick meals</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -65,8 +94,11 @@
         <button class="gallery-arrow gallery-arrow--left" id="galPrev" aria-label="Previous image">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <div class="gallery-main">
+        <div class="gallery-main" id="galleryMain">
           <img src="images/Ebook1.png" alt="Bachelor 99 Survival Cookbook cover" id="mainImage" class="floaty">
+          <div class="gallery-zone gallery-zone--left" id="zoneLeft" aria-hidden="true"></div>
+          <div class="gallery-zone gallery-zone--center" id="zoneCenter" aria-hidden="true"></div>
+          <div class="gallery-zone gallery-zone--right" id="zoneRight" aria-hidden="true"></div>
         </div>
         <button class="gallery-arrow gallery-arrow--right" id="galNext" aria-label="Next image">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
@@ -91,7 +123,7 @@
 
         <div class="rating-row" data-reveal>
           <span class="stars" aria-hidden="true">★★★★★</span>
-          <span class="rating-text">4.8 <span class="muted">(12 reviews)</span></span>
+          <span class="rating-text">4.8 <span class="muted">(<span class="review-count">113</span> reviews)</span></span>
         </div>
 
         <div class="price-row" data-reveal>
@@ -122,11 +154,11 @@
             <span id="qtyValue">1</span>
             <button id="qtyPlus" aria-label="Increase quantity">+</button>
           </div>
-          <button class="btn btn-primary" id="addToCartBtn">
+          <button class="btn btn-secondary" id="addToCartBtn">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             Add to Cart
           </button>
-          <button class="btn btn-secondary" id="buyNowBtn">Buy It Now</button>
+          <button class="btn btn-primary btn-shine" id="buyNowBtn">Buy It Now</button>
         </div>
 
         <div class="payment-icons" data-reveal aria-hidden="true">
@@ -180,12 +212,66 @@
   <section class="why-section">
     <h2 class="section-title" data-reveal>Why This Cookbook?</h2>
     <div class="why-grid">
-      <div class="why-card" data-reveal><span class="why-icon">🍳</span><h3>Simple Recipes</h3><p>No complicated cooking techniques — just food that works.</p></div>
-      <div class="why-card" data-reveal><span class="why-icon">💰</span><h3>Budget Friendly</h3><p>Meals designed around ingredients you can actually afford.</p></div>
-      <div class="why-card" data-reveal><span class="why-icon">⏱</span><h3>Fast Meals</h3><p>Most recipes come together in 30 minutes or less.</p></div>
-      <div class="why-card" data-reveal><span class="why-icon">👨‍🍳</span><h3>Beginner Friendly</h3><p>Built for people who've never cooked a proper meal before.</p></div>
-      <div class="why-card" data-reveal><span class="why-icon">📖</span><h3>Step-by-Step</h3><p>Clear instructions with no guesswork, no jargon.</p></div>
-      <div class="why-card" data-reveal><span class="why-icon">🇮🇳</span><h3>Indian Meals</h3><p>Familiar flavours, cooked the way home food should taste.</p></div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5a6 6 0 0 1 12 0V16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-2.5Z"/><path d="M9 8.5a3 3 0 0 1 6 0"/><path d="M12 3v2.2"/><path d="M4 20h16"/></svg>
+        </span>
+        <h3>Simple Recipes</h3><p>No complicated cooking techniques — just food that works.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><path d="M3 8v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V11a1 1 0 0 0-1-1h-4a2.5 2.5 0 0 0 0 5h5"/><path d="M8 6V5a2 2 0 0 1 2-2h4"/></svg>
+        </span>
+        <h3>Budget Friendly</h3><p>Meals designed around ingredients you can actually afford.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M10 2h4"/><path d="M18.5 5.5 20 4"/></svg>
+        </span>
+        <h3>Fast Meals</h3><p>Most recipes come together in 30 minutes or less.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.2"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+        </span>
+        <h3>Beginner Friendly</h3><p>Built for people who've never cooked a proper meal before.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/><path d="m8 8 .01 0M8 12l.01 0M8 16l.01 0" stroke-width="2.4"/></svg>
+        </span>
+        <h3>Step-by-Step</h3><p>Clear instructions with no guesswork, no jargon.</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <span class="why-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15c2-6 5-9 8-9s6 3 8 9"/><path d="M3 15h18"/><path d="M4 15c0 3.5 3.5 6 8 6s8-2.5 8-6"/><path d="M9 6.5c0-1.4.6-2.5 1.4-3.3M15 6.5c0-1.4-.6-2.5-1.4-3.3"/></svg>
+        </span>
+        <h3>Indian Meals</h3><p>Familiar flavours, cooked the way home food should taste.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Before / After -->
+  <section class="before-after-section">
+    <h2 class="section-title" data-reveal>See The Difference</h2>
+    <p class="ba-subtitle" data-reveal>Drag the slider to see the difference this cookbook makes.</p>
+    <div class="ba-slider" id="baSlider" data-reveal>
+      <div class="ba-stage" id="baStage">
+        <div class="ba-frame" id="baFrame">
+          <img src="images/after.png" alt="After using Bachelor 99 Survival Cookbook" class="ba-img ba-img-after" id="baAfterImg" draggable="false">
+          <div class="ba-before-wrap" id="baBeforeWrap">
+            <img src="images/before.png" alt="Before using Bachelor 99 Survival Cookbook" class="ba-img ba-img-before" id="baBeforeImg" draggable="false">
+          </div>
+          <span class="ba-tag ba-tag-before">Before</span>
+          <span class="ba-tag ba-tag-after">After</span>
+        </div>
+        <div class="ba-divider" id="baDivider">
+          <div class="ba-handle" id="baHandle" role="slider" aria-label="Before and after comparison slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -193,38 +279,29 @@
   <section class="showcase-section">
     <h2 class="section-title" data-reveal>Straight From the Book</h2>
     <div class="showcase-grid" id="showcaseGrid" data-reveal>
-      <button class="showcase-item item-large" data-src="images/book1.png"><img src="images/book1.png" alt="Recipe spread 1" loading="lazy"></button>
-      <button class="showcase-item item-medium" data-src="images/book2.png"><img src="images/book2.png" alt="Recipe spread 2" loading="lazy"></button>
-      <button class="showcase-item item-medium" data-src="images/book3.png"><img src="images/book3.png" alt="Recipe spread 3" loading="lazy"></button>
-      <button class="showcase-item item-small" data-src="images/book4.png"><img src="images/book4.png" alt="Recipe spread 4" loading="lazy"></button>
-      <button class="showcase-item item-small" data-src="images/book5.png"><img src="images/book5.png" alt="Recipe spread 5" loading="lazy"></button>
-      <button class="showcase-item item-small" data-src="images/book6.png"><img src="images/book6.png" alt="Recipe spread 6" loading="lazy"></button>
-      <button class="showcase-item item-small" data-src="images/book7.png"><img src="images/book7.png" alt="Recipe spread 7" loading="lazy"></button>
+      <button class="showcase-item showcase-item--hero" data-src="images/image1.png"><img src="images/image1.png" alt="Recipe spread 1" loading="lazy"></button>
+      <div class="showcase-pair">
+        <button class="showcase-item showcase-item--sq" data-src="images/image2.png"><img src="images/image2.png" alt="Recipe spread 2" loading="lazy"></button>
+        <button class="showcase-item showcase-item--sq" data-src="images/image3.png"><img src="images/image3.png" alt="Recipe spread 3" loading="lazy"></button>
+      </div>
     </div>
   </section>
 
-  <!-- Lightbox -->
+  <!-- CTA -->
+  <section class="cta-section">
+    <button class="btn btn-primary btn-shine cta-button" id="getCookbookBtn" data-reveal>Get the Cookbook</button>
+  </section>
+
+  <!-- Lightbox / Fullscreen viewer -->
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
     <button class="lightbox-close" id="lightboxClose" aria-label="Close">✕</button>
     <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Previous">‹</button>
-    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-viewport" id="lightboxViewport">
+      <img id="lightboxImg" src="" alt="">
+    </div>
     <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Next">›</button>
+    <p class="lightbox-hint">Scroll or pinch to zoom · Drag to pan</p>
   </div>
-
-  <!-- Delivery apps -> self sufficient -->
-  <section class="transform-section">
-    <div class="transform-visual" data-reveal>
-      <img src="images/book2.png" alt="Cooking at home" class="t-img t-img-1" loading="lazy">
-      <img src="images/book3.png" alt="Finished dal" class="t-img t-img-2" loading="lazy">
-      <img src="images/book5.png" alt="Rice and curry" class="t-img t-img-3" loading="lazy">
-      <img src="images/book6.png" alt="Chicken curry" class="t-img t-img-4" loading="lazy">
-    </div>
-    <div class="transform-text" data-reveal>
-      <h2>From delivery apps to <span class="highlight">Self-Sufficient</span></h2>
-      <p>Stop staring at a 45-minute delivery window and start eating better meals for a fraction of the price in half the time.</p>
-      <button class="btn btn-primary" id="getCookbookBtn">Get the Cookbook</button>
-    </div>
-  </section>
 
   <!-- Testimonial carousel -->
   <section class="testimonial-section">
@@ -245,7 +322,7 @@
       <div class="reviews-summary">
         <span class="stars">★★★★★</span>
         <strong>4.7</strong>
-        <span class="muted">(12 reviews)</span>
+        <span class="muted">(<span class="review-count">113</span> reviews)</span>
       </div>
       <button class="btn btn-outline" id="addReviewBtn">+ Add a review</button>
     </div>
@@ -297,7 +374,6 @@
     </div>
     <nav class="footer-nav">
       <a href="#top">Home</a>
-      <a href="#product">Catalog</a>
       <a href="#reviews-full">Reviews</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -316,13 +392,13 @@
 <!-- Sticky mobile purchase bar -->
 <div class="mobile-purchase-bar" id="mobilePurchaseBar">
   <span class="mpb-price">₹99</span>
-  <button class="btn btn-primary" id="mpbBuyBtn">Buy Now</button>
+  <button class="btn btn-primary btn-shine" id="mpbBuyBtn">Buy Now</button>
 </div>
 
 <!-- Chat widget -->
 <button class="chat-fab" id="chatFab" aria-haspopup="dialog" aria-expanded="false">
   <svg class="chat-fab-icon icon-chat" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-  <span class="chat-fab-label">Chat</span>
+  <span class="chat-fab-label" id="chatFabLabel">Chat</span>
   <svg class="chat-fab-icon icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 
@@ -333,31 +409,69 @@
     <p class="chat-subtitle">How can I help you today?</p>
   </div>
 
-  <div class="chat-card">
-    <div class="faq-list" id="faqList"><!-- populated by JS --></div>
+  <div class="chat-body" id="chatBody"></div>
+
+  <!-- Popular questions overlay -->
+  <div class="chat-queries-overlay" id="chatQueriesOverlay" aria-hidden="true">
+    <div class="chat-queries-sheet">
+      <div class="chat-queries-head">
+        <h4>Popular questions</h4>
+        <button type="button" class="chat-queries-close" id="chatQueriesClose" aria-label="Close">✕</button>
+      </div>
+      <div class="chat-queries-list" id="chatQueriesList"><!-- populated by JS --></div>
+    </div>
   </div>
 
   <form class="chat-input-row" id="chatForm">
-    <input type="email" id="chatInput" placeholder="example@email.com" aria-label="Type a message or your email">
-    <div class="chat-input-actions">
-      <button type="button" class="chat-icon-btn" aria-label="Attach image" tabindex="-1">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/><path d="M16 8h3M17.5 6.5v3"/></svg>
-      </button>
-      <button type="button" class="chat-icon-btn" aria-label="Emoji" tabindex="-1">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <button type="submit" class="chat-send-btn" aria-label="Send">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-      </button>
-    </div>
+    <input type="text" id="chatInput" placeholder="Ask me about the cookbook..." aria-label="Type a message">
+    <button type="submit" class="chat-send-btn" aria-label="Send">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+    </button>
   </form>
+</div>
 
-  <div class="chat-body" id="chatBody" hidden></div>
+<!-- Checkout modal -->
+<div class="checkout-overlay" id="checkoutOverlay" aria-hidden="true">
+  <div class="checkout-modal" role="dialog" aria-modal="true" aria-label="Checkout">
+    <button type="button" class="checkout-close" id="checkoutClose" aria-label="Close">✕</button>
+    <h3 class="checkout-title">Complete your purchase</h3>
+    <p class="checkout-subtitle">Bachelor 99 Survival Cookbook · <span id="checkoutQtyLabel">1 copy</span></p>
+
+    <form id="checkoutForm" class="checkout-form" novalidate>
+      <label class="checkout-field">
+        <span>Full Name</span>
+        <input type="text" id="checkoutName" name="customerName" autocomplete="name" required placeholder="e.g. Rahul Sharma">
+      </label>
+      <label class="checkout-field">
+        <span>Email Address</span>
+        <input type="email" id="checkoutEmail" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <label class="checkout-field">
+        <span>Phone Number</span>
+        <input type="tel" id="checkoutPhone" name="phone" autocomplete="tel" required placeholder="10-digit mobile number" inputmode="numeric" maxlength="10">
+      </label>
+
+      <p class="checkout-error" id="checkoutError" hidden></p>
+
+      <div class="checkout-total-row">
+        <span>Total</span>
+        <span id="checkoutTotal">₹99</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-shine checkout-submit" id="checkoutSubmit">
+        <span class="checkout-submit-label">BUY NOW</span>
+      </button>
+      <p class="checkout-secure-note">🔒 Secure payment powered by Cashfree</p>
+    </form>
+  </div>
 </div>
 
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="config.js"></script>
+<script src="cart-shared.js"></script>
+<script src="checkout.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

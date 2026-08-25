@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmation — Bachelor 99 Survival Cookbook</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar scrolled">
+  <div class="nav-inner">
+    <div class="nav-left"></div>
+    <a href="index.html" class="logo">Bachelor<span class="logo-accent">99</span></a>
+    <div class="nav-right"></div>
+  </div>
+</header>
+
+<main class="thankyou-page">
+  <div class="thankyou-card" id="thankyouLoading">
+    <div class="thankyou-spinner"></div>
+    <h1>Checking your payment…</h1>
+    <p>Please hold on a moment while we confirm your order.</p>
+  </div>
+
+  <div class="thankyou-card" id="thankyouSuccess" hidden>
+    <div class="thankyou-icon thankyou-icon--success">✓</div>
+    <h1>Payment Successful! 🎉</h1>
+    <p>Thank you, <strong id="tyCustomerName"></strong>! Your order <strong id="tyOrderId"></strong> is confirmed.</p>
+    <p class="thankyou-note">A confirmation has been recorded against your email. Your download is ready below.</p>
+    <a class="btn btn-primary btn-shine thankyou-download-btn" id="tyDownloadBtn" href="#">Download Your Ebook</a>
+    <a class="thankyou-home-link" href="index.html">← Back to home</a>
+  </div>
+
+  <div class="thankyou-card" id="thankyouFailed" hidden>
+    <div class="thankyou-icon thankyou-icon--failed">✕</div>
+    <h1>Payment Failed</h1>
+    <p>Something went wrong with your payment, or we couldn't find this order. You have not been charged for a failed transaction.</p>
+    <a class="btn btn-primary" href="cart.html">Try Again</a>
+    <a class="thankyou-home-link" href="index.html">← Back to home</a>
+  </div>
+
+  <div class="thankyou-card" id="thankyouPending" hidden>
+    <div class="thankyou-spinner"></div>
+    <h1>Payment Processing…</h1>
+    <p>We're still confirming your payment with the bank. This can take a few moments — please don't close this page.</p>
+    <button type="button" class="btn btn-secondary" id="tyRefreshBtn">Check Again</button>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="thankyou.js"></script>
+</body>
+</html>
