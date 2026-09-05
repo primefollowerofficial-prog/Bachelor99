@@ -122,6 +122,36 @@
   </div>
 </div>
 
+<!-- Contact Us modal -->
+<div class="contact-overlay" id="contactOverlay" aria-hidden="true">
+  <div class="contact-modal" role="dialog" aria-modal="true" aria-label="Contact Us">
+    <button type="button" class="contact-close" id="contactClose" aria-label="Close">✕</button>
+    <h3 class="contact-title">Contact Us</h3>
+    <p class="contact-subtitle">Have a question about your order? Send us a message.</p>
+
+    <form id="contactForm" class="contact-form" novalidate>
+      <label class="contact-field">
+        <span>Your Name</span>
+        <input type="text" id="contactName" name="name" autocomplete="name" required placeholder="e.g. Rahul Sharma">
+      </label>
+      <label class="contact-field">
+        <span>Email Address</span>
+        <input type="email" id="contactEmail" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <label class="contact-field">
+        <span>Message</span>
+        <textarea id="contactMessage" name="message" rows="4" required placeholder="How can we help?"></textarea>
+      </label>
+
+      <p class="contact-error" id="contactError" hidden></p>
+
+      <button type="submit" class="btn btn-primary btn-shine contact-submit" id="contactSubmit">
+        <span class="contact-submit-label">Send Message</span>
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -129,5 +159,6 @@
 <script src="cart-shared.js"></script>
 <script src="cart.js"></script>
 <script src="checkout.js"></script>
+<script src="contact.js"></script>
 </body>
 </html>
