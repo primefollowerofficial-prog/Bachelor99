@@ -375,12 +375,7 @@ ul{ list-style:none; margin:0; padding:0; }
   padding: 30px 26px; transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
 }
 .why-card:hover{ transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--blue-1); }
-.why-icon{
-  display:flex; align-items:center; justify-content:center;
-  width: 48px; height: 48px; margin-bottom: 16px; border-radius: 12px;
-  background: var(--bg-alt); color: var(--blue-2);
-}
-.why-icon svg{ width: 24px; height: 24px; }
+.why-icon{ font-size: 30px; display:block; margin-bottom: 14px; }
 .why-card h3{ font-size: 17px; margin-bottom: 8px; color: var(--navy); }
 .why-card p{ font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
 @media (max-width: 860px){ .why-grid{ grid-template-columns: 1fr 1fr; } }
@@ -389,28 +384,35 @@ ul{ list-style:none; margin:0; padding:0; }
 /* ============================================
    Showcase (editorial masonry)
    ============================================ */
-.showcase-section{ padding: 40px 32px 100px; max-width: 900px; margin:0 auto; }
+.showcase-section{ padding: 40px 32px 100px; max-width: 1280px; margin:0 auto; }
 .showcase-grid{
-  display:flex; flex-direction:column; align-items:center; gap: 18px;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 200px 200px;
+  gap: 16px;
 }
 .showcase-item{
   border:none; padding:0; border-radius: var(--radius-md); overflow:hidden; position:relative;
-  background: var(--bg-alt); display:block;
+  background: var(--bg-alt);
 }
 .showcase-item img{ width:100%; height:100%; object-fit: cover; transition: transform .5s var(--ease); }
-.showcase-item:hover img{ transform: scale(1.06); }
+.showcase-item:hover img{ transform: scale(1.08); }
 .showcase-item::after{
   content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(11,15,26,0.35), transparent 50%);
   opacity:0; transition: opacity .3s var(--ease);
 }
 .showcase-item:hover::after{ opacity:1; }
-.showcase-item--hero{ width:100%; aspect-ratio: 3 / 2; }
-.showcase-pair{ display:flex; gap: 18px; width:100%; }
-.showcase-item--sq{ flex:1 1 0; aspect-ratio: 1 / 1; min-width:0; }
+.item-large{ grid-column: span 2; grid-row: span 2; }
+.item-medium{ grid-column: span 2; grid-row: span 1; }
+.item-small{ grid-column: span 1; grid-row: span 1; }
 
-@media (max-width: 560px){
-  .showcase-pair{ flex-direction: column; }
-  .showcase-item--sq{ width:100%; }
+@media (max-width: 860px){
+  .showcase-grid{ grid-template-columns: repeat(2,1fr); grid-template-rows: repeat(4, 160px); }
+  .item-large{ grid-column: span 2; grid-row: span 2; }
+  .item-medium{ grid-column: span 1; grid-row: span 1; }
+}
+@media (max-width: 480px){
+  .showcase-grid{ grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, 130px); }
 }
 
 /* Lightbox */
@@ -457,68 +459,33 @@ ul{ list-style:none; margin:0; padding:0; }
 }
 
 /* ============================================
-   Before / After comparison slider
+   Transform section (dark)
    ============================================ */
-.before-after-section{ padding: 40px 32px 20px; max-width: 900px; margin:0 auto; text-align:center; }
-.ba-subtitle{ color: var(--ink-soft); font-size: 15px; margin-bottom: 32px; }
-.ba-slider{ width:100%; }
-.ba-stage{
-  position: relative; width:100%; aspect-ratio: 3 / 2;
-  user-select:none; touch-action: pan-y;
+.transform-section{
+  background: var(--navy);
+  padding: 90px 32px;
+  display:grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items:center;
+  max-width: 1280px; margin: 0 auto; border-radius: var(--radius-lg);
 }
-.ba-frame{
-  position: absolute; inset:0; border-radius: var(--radius-md);
-  overflow:hidden; box-shadow: var(--shadow-md); background: var(--bg-alt);
+.transform-visual{
+  display:grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; height: 420px;
 }
-.ba-img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-  pointer-events:none; -webkit-user-drag:none;
+.t-img{ width:100%; height:100%; object-fit:cover; border-radius: var(--radius-md); transition: transform .4s var(--ease); }
+.t-img:hover{ transform: scale(1.03); }
+.t-img-1{ grid-row: span 2; }
+.transform-text h2{
+  font-size: clamp(28px, 3.6vw, 40px); color: #fff; line-height:1.15; margin-bottom: 18px;
 }
-.ba-img-after{ z-index:1; }
-.ba-before-wrap{
-  position:absolute; inset:0; width:100%; height:100%; overflow:hidden; z-index:2;
+.highlight{
+  background: var(--blue-grad); -webkit-background-clip:text; background-clip:text; color:transparent;
+  font-style: italic;
 }
-.ba-before-wrap .ba-img-before{ position:absolute; inset:0; width: var(--ba-frame-w, 100%); height:100%; max-width:none; }
-.ba-tag{
-  position:absolute; top:16px; z-index:3; background: rgba(11,15,26,0.65); color:#fff;
-  font-size: 12px; font-weight:700; letter-spacing: .03em; padding: 6px 12px; border-radius: 100px;
-  pointer-events:none;
+.transform-text p{ color: #B7C0D4; font-size: 16px; line-height: 1.7; margin-bottom: 28px; }
+@media (max-width: 900px){
+  .transform-section{ grid-template-columns: 1fr; border-radius: 0; }
+  .transform-visual{ height: 320px; }
 }
-.ba-tag-before{ left:16px; }
-.ba-tag-after{ right:16px; }
-.ba-divider{
-  position:absolute; top:0; bottom:0; left:100%; width:0; z-index:4;
-  transform: translateX(-50%); touch-action:none;
-}
-.ba-divider::before{
-  content:''; position:absolute; top:0; bottom:0; left:50%; width:3px; background:#fff;
-  transform: translateX(-50%); box-shadow: 0 0 0 1px rgba(11,15,26,0.15); pointer-events:none;
-}
-.ba-handle{
-  position:absolute; top:50%; left:50%; transform: translate(-50%,-50%);
-  width: 42px; height:42px; border-radius:50%; background:#fff; color: var(--navy);
-  display:flex; align-items:center; justify-content:center; gap:2px;
-  box-shadow: var(--shadow-md); cursor: ew-resize; touch-action:none;
-}
-.ba-handle:hover{ box-shadow: var(--shadow-lg); }
-@media (max-width: 480px){
-  .before-after-section{ padding: 30px 16px 10px; }
-  .ba-handle{ width:36px; height:36px; }
-  .ba-tag{ font-size:11px; padding:5px 10px; }
-}
-
-/* ============================================
-   CTA section
-   ============================================ */
-.cta-section{
-  display:flex; align-items:center; justify-content:center;
-  padding: 32px 32px 56px; max-width: 1280px; margin: 0 auto;
-}
-.cta-button{ padding: 16px 46px; font-size: 16px; flex: none; }
-@media (max-width: 480px){
-  .cta-section{ padding: 24px 20px 44px; }
-  .cta-button{ width:100%; }
-}
+@media (max-width: 480px){ .transform-section{ padding: 60px 20px; } }
 
 /* ============================================
    Testimonials carousel
@@ -804,7 +771,99 @@ ul{ list-style:none; margin:0; padding:0; }
   pointer-events:none;
 }
 .toast.show{ opacity:1; transform: translateY(0); }
+.toast.toast-success{ background: linear-gradient(135deg, #16A34A, #22C55E); }
+.toast.toast-error{ background: linear-gradient(135deg, #DC2626, #F87171); }
+.toast.toast-info{ background: var(--navy); }
 @media (max-width: 480px){ .toast{ left:16px; right:16px; bottom:16px; text-align:center; } }
+
+/* ============================================
+   Celebration pop-up (confetti + trophy) — shown
+   for ~3s right when a payment is confirmed
+   ============================================ */
+.celebrate-overlay{
+  position: fixed; inset:0; z-index: 700;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+  opacity:0; transition: opacity .3s ease;
+}
+.celebrate-overlay.show{ opacity:1; }
+.celebrate-overlay.fade-out{ opacity:0; }
+.celebrate-canvas{ position:absolute; inset:0; width:100%; height:100%; }
+.celebrate-badge{
+  position: relative; z-index:2;
+  background: linear-gradient(135deg, var(--blue-2), var(--blue-1));
+  color:#fff; border-radius: 28px; padding: 32px 44px;
+  text-align:center; box-shadow: 0 24px 60px rgba(20,159,227,0.45);
+  transform: scale(0.4); opacity:0;
+  animation: celebratePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes celebratePop{
+  0%{ transform: scale(0.3) rotate(-8deg); opacity:0; }
+  60%{ transform: scale(1.08) rotate(2deg); opacity:1; }
+  100%{ transform: scale(1) rotate(0deg); opacity:1; }
+}
+.celebrate-trophy{ font-size: 52px; display:block; margin-bottom: 10px; animation: celebrateBounce 1s ease-in-out infinite; }
+@keyframes celebrateBounce{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-8px); } }
+.celebrate-badge h2{ font-family: var(--font-display); font-size: 22px; margin: 0 0 4px; color:#fff; }
+.celebrate-badge p{ font-size: 13px; color: rgba(255,255,255,0.85); margin:0; }
+
+/* ============================================
+   Contact modal (site-wide "Contact Us")
+   ============================================ */
+.contact-overlay{
+  position: fixed; inset:0; z-index: 500;
+  background: rgba(11,15,26,0.55);
+  display:flex; align-items:center; justify-content:center; padding: 20px;
+  opacity:0; visibility:hidden; transition: opacity .3s var(--ease), visibility .3s;
+}
+.contact-overlay.open{ opacity:1; visibility:visible; }
+.contact-modal{
+  position: relative;
+  background: var(--white); border-radius: 22px; width: 100%; max-width: 420px;
+  max-height: 90vh; overflow-y: auto;
+  padding: 32px 28px 28px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(16px) scale(0.98); transition: transform .3s var(--ease);
+}
+.contact-overlay.open .contact-modal{ transform: translateY(0) scale(1); }
+.contact-close{
+  position:absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius:50%;
+  border:none; background: var(--bg-alt); color: var(--ink); font-size: 13px;
+}
+.contact-title{ font-family: var(--font-display); font-size: 22px; color: var(--navy); margin: 0 0 6px; padding-right: 30px; }
+.contact-subtitle{ font-size: 13.5px; color: var(--ink-soft); margin: 0 0 22px; }
+.contact-form{ display:flex; flex-direction:column; gap: 16px; }
+.contact-field{ display:flex; flex-direction:column; gap: 6px; }
+.contact-field span{ font-size: 12.5px; font-weight:700; color: var(--ink-soft); letter-spacing: 0.02em; }
+.contact-field input, .contact-field textarea{
+  border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  font-family: inherit; font-size: 14.5px; color: var(--ink); background: var(--bg-alt);
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+  resize: vertical;
+}
+.contact-field input:focus, .contact-field textarea:focus{ outline:none; border-color: var(--blue-1); background: var(--white); }
+.contact-error{
+  background: #FDEDEE; color: #B3261E; font-size: 13px; font-weight:600;
+  padding: 10px 14px; border-radius: 10px; margin: 0;
+}
+.contact-submit{ width:100%; padding: 15px; font-size: 15px; letter-spacing: 0.03em; margin-top: 4px; border-radius: 100px; }
+.contact-submit.is-loading{ opacity: 0.75; cursor: progress; }
+
+/* Rounded "Contact Us" trigger button used on thank-you / anywhere */
+.contact-trigger-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--navy);
+  border-radius: 100px; padding: 11px 24px; font-size: 14px; font-weight:700;
+  margin-top: 14px; transition: background .2s var(--ease), border-color .2s var(--ease);
+}
+.contact-trigger-btn:hover{ background: var(--bg-alt); border-color: var(--blue-1); }
+
+@media (max-width: 480px){
+  .contact-modal{ padding: 26px 20px 22px; border-radius: 18px; }
+  .contact-title{ font-size: 19px; }
+  .celebrate-badge{ padding: 26px 32px; }
+  .celebrate-trophy{ font-size: 42px; }
+}
 /* ============================================
    Gallery click zones (left = prev, center = fullscreen, right = next)
    ============================================ */
@@ -928,7 +987,7 @@ html, body{ max-width: 100%; overflow-x: hidden; }
 .product-grid, .gallery, .gallery-main, .product-info,
 .thumb-strip, .purchase-row, .price-row, .benefits,
 .countdown-box, .countdown-timer, .why-grid, .showcase-grid,
-.before-after-section, .ba-slider, .ba-frame, .cta-section, .testimonial-section, .reviews-section,
+.transform-section, .testimonial-section, .reviews-section,
 .contact-section, .footer-inner, .nav-inner{
   max-width: 100%;
   box-sizing: border-box;
