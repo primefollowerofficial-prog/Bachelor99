@@ -1105,6 +1105,55 @@ html, body{ max-width: 100%; overflow-x: hidden; }
 }
 
 /* ============================================
+   Contact Us modal
+   ============================================ */
+.contact-overlay{
+  position: fixed; inset:0; z-index: 500;
+  background: rgba(11,15,26,0.55);
+  display:flex; align-items:center; justify-content:center; padding: 20px;
+  opacity:0; visibility:hidden; transition: opacity .3s var(--ease), visibility .3s;
+}
+.contact-overlay.open{ opacity:1; visibility:visible; }
+.contact-modal{
+  position: relative;
+  background: var(--white); border-radius: 22px; width: 100%; max-width: 420px;
+  max-height: 90vh; overflow-y: auto;
+  padding: 32px 28px 28px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(16px) scale(0.98); transition: transform .3s var(--ease);
+}
+.contact-overlay.open .contact-modal{ transform: translateY(0) scale(1); }
+.contact-close{
+  position:absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius:50%;
+  border:none; background: var(--bg-alt); color: var(--ink); font-size: 13px;
+}
+.contact-title{ font-family: var(--font-display); font-size: 22px; color: var(--navy); margin: 0 0 6px; padding-right: 30px; }
+.contact-subtitle{ font-size: 13.5px; color: var(--ink-soft); margin: 0 0 22px; }
+.contact-form{ display:flex; flex-direction:column; gap: 16px; }
+.contact-field{ display:flex; flex-direction:column; gap: 6px; }
+.contact-field span{ font-size: 12.5px; font-weight:700; color: var(--ink-soft); letter-spacing: 0.02em; }
+.contact-field input, .contact-field textarea{
+  border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  font-family: inherit; font-size: 14.5px; color: var(--ink); background: var(--bg-alt);
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+  resize: vertical;
+}
+.contact-field input:focus, .contact-field textarea:focus{ outline:none; border-color: var(--blue-1); background: var(--white); }
+.contact-error{
+  background: #FDEDEE; color: #B3261E; font-size: 13px; font-weight:600;
+  padding: 10px 14px; border-radius: 10px; margin: 0;
+}
+.contact-submit{
+  width:100%; padding: 15px; font-size: 15px; letter-spacing: 0.03em; margin-top: 4px;
+}
+.contact-submit.is-loading{ opacity: 0.75; cursor: progress; }
+
+@media (max-width: 480px){
+  .contact-modal{ padding: 26px 20px 22px; border-radius: 18px; }
+  .contact-title{ font-size: 19px; }
+}
+
+/* ============================================
    Thank you page
    ============================================ */
 .thankyou-page{
