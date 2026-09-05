@@ -158,3 +158,9 @@ const Checkout = (() => {
 
   return { open, close };
 })();
+
+// Top-level `const` does NOT attach to `window` automatically in classic
+// scripts — cart.js checks `window.Checkout` before calling .open(), so
+// without this line, Buy Now on cart.html silently does nothing (no error,
+// the check just always evaluates false).
+window.Checkout = Checkout;
