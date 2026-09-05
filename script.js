@@ -71,7 +71,14 @@ mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => 
 /* ============================================
    Toast notifications
    ============================================ */
-/* showToast() now lives in cart-shared.js so it also works on thankyou.html */
+let toastTimer = null;
+function showToast(message){
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
 
 /* ============================================
    Scroll-triggered reveal animations
@@ -303,6 +310,81 @@ function initializeGallery(){
 }
 
 /* ============================================
+   Before / After comparison slider
+   ============================================ */
+function initializeBeforeAfterSlider(){
+  const stage = document.getElementById('baStage');
+  if(!stage) return;
+  const frame = document.getElementById('baFrame');
+  const beforeWrap = document.getElementById('baBeforeWrap');
+  const divider = document.getElementById('baDivider');
+  const handle = document.getElementById('baHandle');
+
+  let percent = 100; // starts with the "before" image fully visible
+  let isDragging = false;
+
+  function syncFrameWidth(){
+    frame.style.setProperty('--ba-frame-w', stage.offsetWidth + 'px');
+  }
+
+  function setPercent(p){
+    percent = Math.min(100, Math.max(0, p));
+    beforeWrap.style.width = percent + '%';
+    divider.style.left = percent + '%';
+    handle.setAttribute('aria-valuenow', String(Math.round(percent)));
+  }
+
+  function percentFromClientX(clientX){
+    const rect = stage.getBoundingClientRect();
+    const x = clientX - rect.left;
+    return (x / rect.width) * 100;
+  }
+
+  function startDrag(clientX, pointerId, capture){
+    isDragging = true;
+    if(capture && handle.setPointerCapture){
+      try{ handle.setPointerCapture(pointerId); }catch(err){}
+    }
+    setPercent(percentFromClientX(clientX));
+  }
+  function handleMove(e){
+    if(!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    setPercent(percentFromClientX(clientX));
+    if(e.cancelable) e.preventDefault();
+  }
+  function stopDrag(){ isDragging = false; }
+
+  handle.addEventListener('pointerdown', (e) => {
+    startDrag(e.clientX, e.pointerId, true);
+    e.preventDefault();
+  });
+  divider.addEventListener('pointerdown', (e) => {
+    startDrag(e.clientX, e.pointerId, false);
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', handleMove, { passive: false });
+  window.addEventListener('pointerup', stopDrag);
+  window.addEventListener('pointercancel', stopDrag);
+
+  // Also let clicking anywhere on the stage jump the divider there
+  stage.addEventListener('pointerdown', (e) => {
+    if(handle.contains(e.target) || divider.contains(e.target)) return;
+    startDrag(e.clientX, e.pointerId, false);
+  });
+
+  // Keyboard accessibility
+  handle.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowLeft'){ setPercent(percent - 5); e.preventDefault(); }
+    if(e.key === 'ArrowRight'){ setPercent(percent + 5); e.preventDefault(); }
+  });
+
+  window.addEventListener('resize', syncFrameWidth, { passive: true });
+  syncFrameWidth();
+  setPercent(100);
+}
+
+/* ============================================
    Showcase grid — opens the fullscreen viewer
    ============================================ */
 function initializeShowcase(){
@@ -388,7 +470,7 @@ function initializePurchase(){
 
   document.getElementById('addToCartBtn').addEventListener('click', () => {
     CartStore.add(qty);
-    showToast(`ADDED TO CART (${qty} ${qty > 1 ? 'copies' : 'copy'})`, 'success');
+    showToast(`Bachelor 99 has been added to your cart! (${qty} ${qty > 1 ? 'copies' : 'copy'})`);
   });
   document.getElementById('buyNowBtn').addEventListener('click', () => {
     if(CartStore.getQty() < 1) CartStore.add(qty);
@@ -402,7 +484,7 @@ function initializePurchase(){
     document.getElementById('product').scrollIntoView({ behavior: 'smooth' });
   });
   document.getElementById('contactBtn').addEventListener('click', () => {
-    if(window.ContactUs) window.ContactUs.open();
+    showToast("Message sent! We'll get back to you soon.");
   });
 }
 
@@ -497,6 +579,39 @@ function initializeTestimonials(){
 }
 
 /* ============================================
+   Review counter — starts at 113, +1 every
+   completed hour, persisted via localStorage
+   ============================================ */
+function initializeReviewCounter(){
+  const BASE_COUNT = 113;
+  const STORAGE_KEY = 'b99_reviewCounterStart';
+  const HOUR_MS = 60 * 60 * 1000;
+
+  let startTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  if(!startTime || Number.isNaN(startTime)){
+    startTime = Date.now();
+    localStorage.setItem(STORAGE_KEY, String(startTime));
+  }
+
+  function currentCount(){
+    const elapsedHours = Math.floor((Date.now() - startTime) / HOUR_MS);
+    return BASE_COUNT + Math.max(0, elapsedHours);
+  }
+
+  function render(){
+    const count = currentCount();
+    document.querySelectorAll('.review-count').forEach(el => {
+      el.textContent = count.toLocaleString('en-IN');
+    });
+  }
+
+  render();
+  // Check periodically so the count updates live if the tab stays open
+  // across an hour boundary, without needing a refresh.
+  setInterval(render, 60 * 1000);
+}
+
+/* ============================================
    Reviews list + add review form
    ============================================ */
 function initializeReviews(){
@@ -555,7 +670,7 @@ function initializeReviews(){
     });
 
     if(!valid){
-      showToast('Please fill in all fields before submitting.', 'error');
+      showToast('Please fill in all fields before submitting.');
       return;
     }
 
@@ -572,7 +687,7 @@ function initializeReviews(){
     selectedRating = 0;
     starButtons.forEach(b => b.classList.remove('active'));
 
-    showToast('REVIEW ADDED', 'success');
+    showToast('✓ Review added successfully! Thanks for sharing your experience.');
   });
 }
 
@@ -761,12 +876,14 @@ function initializeMobilePurchaseBar(){
 document.addEventListener('DOMContentLoaded', () => {
   initializeSearch();
   initializeGallery();
+  initializeBeforeAfterSlider();
   initializeShowcase();
   initializePurchase();
   initializeAccordions();
   initializeCountdown();
   initializeTestimonials();
   initializeReviews();
+  initializeReviewCounter();
   initializeChat();
   initializeMobilePurchaseBar();
   initializeScrollAnimations();
