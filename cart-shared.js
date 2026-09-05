@@ -57,21 +57,3 @@ const CartStore = (() => {
 
   return { getQty, setQty, add, clear };
 })();
-
-/* ============================================
-   Shared toast notifications — used on every page.
-   type: 'success' (green), 'error' (red), 'info' (navy, default look)
-   ============================================ */
-let toastTimer = null;
-function showToast(message, type = 'success'){
-  const toast = document.getElementById('toast');
-  if(!toast) return;
-  toast.textContent = message;
-  toast.classList.remove('toast-success', 'toast-error', 'toast-info');
-  toast.classList.add(`toast-${type}`);
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-
