@@ -5,6 +5,12 @@
    Polls the backend's /api/orders/status/:orderId (server-side verified —
    never trusts the URL or frontend for payment truth) and reveals the
    ebook viewer link ONLY when the backend confirms status === "paid".
+
+   This is the security boundary discussed earlier: Cashfree never sends
+   the user straight to the ebook viewer. The ebook viewer URL only ever
+   reaches the browser after this page gets a "paid" confirmation from
+   the backend, straight from Firestore/Cashfree — not from anything the
+   user could fake in the address bar.
    ============================================ */
 
 (function () {
@@ -26,66 +32,6 @@
     });
   }
 
-  /* ----- Confetti celebration (runs for ~3 seconds) ----- */
-  function runConfettiCelebration() {
-    const overlay = document.getElementById('celebrateOverlay');
-    const canvas = document.getElementById('celebrateCanvas');
-    if (!overlay || !canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const colors = ['#149FE3', '#2439B8', '#FFC93C', '#FF7A45', '#22C55E'];
-    const particles = Array.from({ length: 140 }, () => ({
-      x: Math.random() * canvas.width,
-      y: -20 - Math.random() * canvas.height * 0.5,
-      size: 6 + Math.random() * 6,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speedY: 2 + Math.random() * 3,
-      speedX: (Math.random() - 0.5) * 2,
-      rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 10
-    }));
-
-    overlay.classList.add('show');
-    overlay.setAttribute('aria-hidden', 'false');
-
-    let animId;
-    let running = true;
-
-    function draw() {
-      if (!running) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.y += p.speedY;
-        p.x += p.speedX;
-        p.rotation += p.rotationSpeed;
-        if (p.y > canvas.height + 20) p.y = -20;
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        ctx.restore();
-      });
-      animId = requestAnimationFrame(draw);
-    }
-    draw();
-
-    // Runs for ~3 seconds, then fades out and stops
-    setTimeout(() => {
-      overlay.classList.add('fade-out');
-      setTimeout(() => {
-        running = false;
-        cancelAnimationFrame(animId);
-        overlay.classList.remove('show', 'fade-out');
-        overlay.setAttribute('aria-hidden', 'true');
-      }, 300);
-    }, 3000);
-  }
-
   function renderSuccess(order) {
     const nameEl = document.getElementById('tyCustomerName');
     const orderIdEl = document.getElementById('tyOrderId');
@@ -104,10 +50,6 @@
     if (window.CartStore) CartStore.clear();
 
     showState('thankyouSuccess');
-    runConfettiCelebration();
-    if (typeof showToast === 'function') {
-      showToast('ORDER COMPLETED', 'success');
-    }
   }
 
   async function checkStatus(orderId) {
@@ -131,7 +73,6 @@
 
       if (order.status === 'failed') {
         showState('thankyouFailed');
-        if (typeof showToast === 'function') showToast('PAYMENT FAILED', 'error');
         return; // stop polling
       }
 
@@ -171,13 +112,6 @@
         pollCount = 0;
         showState('thankyouLoading');
         poll(orderId);
-      });
-    }
-
-    const contactBtn = document.getElementById('tyContactBtn');
-    if (contactBtn) {
-      contactBtn.addEventListener('click', () => {
-        if (window.ContactUs) window.ContactUs.open();
       });
     }
   }

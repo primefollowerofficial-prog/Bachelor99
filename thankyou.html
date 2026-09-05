@@ -32,9 +32,6 @@
     <p>Thank you, <strong id="tyCustomerName"></strong>! Your order <strong id="tyOrderId"></strong> is confirmed.</p>
     <p class="thankyou-note">A confirmation has been recorded against your email. Your download is ready below.</p>
     <a class="btn btn-primary btn-shine thankyou-download-btn" id="tyDownloadBtn" href="#">Download Your Ebook</a>
-    <br>
-    <button type="button" class="contact-trigger-btn" id="tyContactBtn">Have a question? Contact Us</button>
-    <br>
     <a class="thankyou-home-link" href="index.html">← Back to home</a>
   </div>
 
@@ -54,52 +51,7 @@
   </div>
 </main>
 
-<!-- Celebration pop-up (confetti), shown briefly on payment success -->
-<div class="celebrate-overlay" id="celebrateOverlay" aria-hidden="true">
-  <canvas class="celebrate-canvas" id="celebrateCanvas"></canvas>
-  <div class="celebrate-badge">
-    <span class="celebrate-trophy" aria-hidden="true">🏆</span>
-    <h2>You're all set!</h2>
-    <p>Your cookbook is ready to download</p>
-  </div>
-</div>
-
-<!-- Contact Us modal -->
-<div class="contact-overlay" id="contactOverlay" aria-hidden="true">
-  <div class="contact-modal" role="dialog" aria-modal="true" aria-label="Contact Us">
-    <button type="button" class="contact-close" id="contactClose" aria-label="Close">✕</button>
-    <h3 class="contact-title">Contact Us</h3>
-    <p class="contact-subtitle">Have a question about your order or the cookbook? Send us a message.</p>
-
-    <form id="contactForm" class="contact-form" novalidate>
-      <label class="contact-field">
-        <span>Your Name</span>
-        <input type="text" id="contactName" name="name" autocomplete="name" required placeholder="e.g. Rahul Sharma">
-      </label>
-      <label class="contact-field">
-        <span>Email Address</span>
-        <input type="email" id="contactEmail" name="email" autocomplete="email" required placeholder="you@example.com">
-      </label>
-      <label class="contact-field">
-        <span>Message</span>
-        <textarea id="contactMessage" name="message" rows="4" required placeholder="How can we help?"></textarea>
-      </label>
-
-      <p class="contact-error" id="contactError" hidden></p>
-
-      <button type="submit" class="btn btn-primary btn-shine contact-submit" id="contactSubmit">
-        <span class="contact-submit-label">Send Message</span>
-      </button>
-    </form>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
 <script src="config.js"></script>
-<script src="cart-shared.js"></script>
-<script src="contact.js"></script>
 <script src="thankyou.js"></script>
 </body>
 </html>

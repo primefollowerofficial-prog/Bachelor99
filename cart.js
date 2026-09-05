@@ -66,7 +66,6 @@ function init() {
     removeBtn.addEventListener('click', () => {
       CartStore.clear();
       renderCart();
-      if (typeof showToast === 'function') showToast('ITEM REMOVED', 'info');
     });
   }
 
