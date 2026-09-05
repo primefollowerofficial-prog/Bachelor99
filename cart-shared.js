@@ -73,3 +73,5 @@ function showToast(message, type = 'success'){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
+
+
