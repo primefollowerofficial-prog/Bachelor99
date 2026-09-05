@@ -3,6 +3,13 @@
    Checkout modal — Buy Now flow
    Frontend never decides the price; the backend (Railway) recomputes
    ₹99 × quantity server-side and creates the Cashfree order.
+
+   FIX APPLIED: backend's /api/orders/create expects firstName and
+   lastName as separate fields. This form only has a single "Full Name"
+   input, so we split it here before sending: first word -> firstName,
+   the rest -> lastName. If there's no space (single word name),
+   the same word is used for both so the backend's "lastName required"
+   check still passes.
    ============================================ */
 const Checkout = (() => {
   const DISPLAY_PRICE = 99; // display-only; backend is the source of truth
@@ -45,6 +52,15 @@ const Checkout = (() => {
     submitBtn.disabled = isLoading;
     submitBtn.classList.toggle('is-loading', isLoading);
     if(submitLabel) submitLabel.textContent = isLoading ? 'Processing…' : 'BUY NOW';
+  }
+
+  // Splits "John Smith" -> { firstName: "John", lastName: "Smith" }
+  // Splits "Cher" -> { firstName: "Cher", lastName: "Cher" } (backend requires both)
+  function splitName(fullName){
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return { firstName: '', lastName: '' };
+    if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
+    return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
   }
 
   function open(qty){
@@ -94,13 +110,15 @@ const Checkout = (() => {
     e.preventDefault();
     hideError();
 
-    const customerName = nameInput.value.trim();
+    const fullName = nameInput.value.trim();
     const email = emailInput.value.trim();
     const phoneDigits = phoneInput.value.replace(/\D/g, '');
 
-    if(!customerName){ return showError('Please enter your full name.'); }
+    if(!fullName){ return showError('Please enter your full name.'); }
     if(!/^\S+@\S+\.\S+$/.test(email)){ return showError('Please enter a valid email address.'); }
     if(phoneDigits.length !== 10){ return showError('Please enter a valid 10-digit phone number.'); }
+
+    const { firstName, lastName } = splitName(fullName);
 
     setLoading(true);
     try{
@@ -108,7 +126,7 @@ const Checkout = (() => {
       const response = await fetch(`${base}/api/orders/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName, email, phone: phoneDigits, quantity: currentQty })
+        body: JSON.stringify({ firstName, lastName, email, phone: phoneDigits, quantity: currentQty })
       });
       const data = await response.json();
       if(!response.ok) throw new Error(data.error || 'Could not start checkout. Please try again.');
