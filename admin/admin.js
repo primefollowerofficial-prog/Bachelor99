@@ -39,19 +39,36 @@
   /* ============================================
      API helper — attaches x-admin-key, redirects to login on 401
      ============================================ */
-  async function api(path, opts = {}) {
-    const response = await fetch(`${base()}${path}`, {
-      ...opts,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-admin-key': adminKey || '',
-        ...(opts.headers || {})
+  async function api(path, opts = {}, retryOnFail = true) {
+    let response;
+    try {
+      response = await fetch(`${base()}${path}`, {
+        ...opts,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey || '',
+          ...(opts.headers || {})
+        }
+      });
+    } catch (networkErr) {
+      // Network hiccup / cold-started backend not answering yet — retry once.
+      if (retryOnFail) {
+        await new Promise(r => setTimeout(r, 1200));
+        return api(path, opts, false);
       }
-    });
+      throw new Error('Could not reach the server. Check your connection and try again.');
+    }
 
     if (response.status === 401) {
       logout('Your session expired or the key is invalid. Please log in again.');
       throw new Error('Unauthorized');
+    }
+
+    // A transient 500 (e.g. a cold Railway instance) is worth one retry
+    // before we bother the user with an error toast.
+    if (response.status >= 500 && retryOnFail) {
+      await new Promise(r => setTimeout(r, 1200));
+      return api(path, opts, false);
     }
 
     let data = null;
@@ -82,10 +99,13 @@
     document.getElementById('loginScreen').hidden = true;
     document.getElementById('adminApp').hidden = false;
     initAppOnce();
+    // Staggered rather than fired all at once — a cold-started free-tier
+    // backend handles four sequential-ish calls much more reliably than
+    // four simultaneous ones landing in the same instant.
     loadDashboard('7d');
-    loadFunnel('7d');
-    loadMessages();
-    loadCoupons();
+    setTimeout(() => loadFunnel('7d'), 250);
+    setTimeout(() => loadMessages(), 500);
+    setTimeout(() => loadCoupons(), 750);
   }
 
   function logout(message) {

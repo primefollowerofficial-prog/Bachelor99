@@ -80,6 +80,13 @@ h1,h2{ font-family: var(--font-display); margin: 0; }
 
 /* ============ App shell ============ */
 .admin-app{ min-height: 100vh; display:flex; flex-direction: column; }
+
+/* CRITICAL: without this, [hidden] gets silently overridden by the
+   .admin-app / .login-screen display:flex rules above (equal CSS
+   specificity, our stylesheet loads after the browser default one) —
+   meaning the dashboard renders underneath the login screen even before
+   logging in. This rule guarantees hidden always wins. */
+[hidden]{ display: none !important; }
 .admin-topbar{
   display:flex; align-items:center; gap: 24px; padding: 14px 28px;
   background: rgba(16,21,31,0.9); backdrop-filter: blur(10px);
