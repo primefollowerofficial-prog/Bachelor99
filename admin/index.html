@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Bachelor 99</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Bachelor<span>99</span><small>Admin</small></div>
+    <p class="login-sub">Enter your admin key to continue</p>
+    <form id="loginForm" novalidate>
+      <input type="password" id="loginKey" placeholder="Admin key" autocomplete="current-password" required>
+      <p class="login-error" id="loginError" hidden></p>
+      <button type="submit" class="btn-neon" id="loginSubmit">
+        <span>Unlock Dashboard</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ ADMIN APP ============ -->
+<div class="admin-app" id="adminApp" hidden>
+
+  <header class="admin-topbar">
+    <div class="admin-logo">Bachelor<span>99</span><small>Admin</small></div>
+    <nav class="admin-tabs" id="adminTabs">
+      <button type="button" class="admin-tab active" data-tab="dashboard">📊 Dashboard</button>
+      <button type="button" class="admin-tab" data-tab="orders">🛒 Orders</button>
+      <button type="button" class="admin-tab" data-tab="coupons">🎟️ Coupons</button>
+      <button type="button" class="admin-tab" data-tab="funnel">🎯 Funnel</button>
+      <button type="button" class="admin-tab" data-tab="messages">💬 Messages <span class="tab-badge" id="messagesBadge" hidden>0</span></button>
+    </nav>
+    <button type="button" class="btn-logout" id="logoutBtn">Log out</button>
+  </header>
+
+  <main class="admin-main">
+
+    <!-- ===== DASHBOARD TAB ===== -->
+    <section class="admin-panel active" id="panel-dashboard">
+      <div class="panel-head">
+        <h1>Dashboard</h1>
+        <div class="range-selector" id="dashboardRange" data-current="7d">
+          <button type="button" data-range="today">Today</button>
+          <button type="button" data-range="7d" class="active">7 Days</button>
+          <button type="button" data-range="30d">30 Days</button>
+          <button type="button" data-range="all">All Time</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card kpi-blue"><span class="kpi-icon">💰</span><span class="kpi-label">Total Revenue</span><span class="kpi-value" id="kpiRevenue">₹0</span></div>
+        <div class="kpi-card kpi-pink"><span class="kpi-icon">🛒</span><span class="kpi-label">Total Orders</span><span class="kpi-value" id="kpiOrders">0</span></div>
+        <div class="kpi-card kpi-purple"><span class="kpi-icon">👥</span><span class="kpi-label">Total Customers</span><span class="kpi-value" id="kpiCustomers">0</span></div>
+        <div class="kpi-card kpi-green"><span class="kpi-icon">📚</span><span class="kpi-label">Ebooks Sold</span><span class="kpi-value" id="kpiEbooks">0</span></div>
+        <div class="kpi-card kpi-blue"><span class="kpi-icon">📈</span><span class="kpi-label">Conversion Rate</span><span class="kpi-value" id="kpiConversion">0%</span></div>
+        <div class="kpi-card kpi-pink"><span class="kpi-icon">💳</span><span class="kpi-label">Avg. Order Value</span><span class="kpi-value" id="kpiAOV">₹0</span></div>
+        <div class="kpi-card kpi-purple"><span class="kpi-icon">↩️</span><span class="kpi-label">Refunds</span><span class="kpi-value">—</span></div>
+        <div class="kpi-card kpi-green kpi-glow"><span class="kpi-icon">🟢</span><span class="kpi-label">Today's Revenue</span><span class="kpi-value" id="kpiTodayRevenue">₹0</span></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-head">
+          <h2>Revenue &amp; Orders</h2>
+        </div>
+        <div class="chart-wrap"><canvas id="revenueChart" height="90"></canvas></div>
+      </div>
+
+      <div class="table-card">
+        <h2>Recent Orders</h2>
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Qty</th><th>Amount</th><th>Coupon</th><th>Paid At</th></tr></thead>
+            <tbody id="recentOrdersBody"><tr><td colspan="7" class="table-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ORDERS TAB ===== -->
+    <section class="admin-panel" id="panel-orders">
+      <div class="panel-head"><h1>Orders Management</h1></div>
+      <p class="panel-note">Showing the most recent paid orders. This is one of the most important sections — every completed sale lands here.</p>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Email</th><th>Product</th><th>Qty</th><th>Amount</th><th>Coupon</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="ordersBody"><tr><td colspan="9" class="table-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== COUPONS TAB ===== -->
+    <section class="admin-panel" id="panel-coupons">
+      <div class="panel-head"><h1>Coupon Management</h1></div>
+
+      <div class="coupon-create-card">
+        <h2>Create Coupon</h2>
+        <form id="couponForm" class="coupon-create-form">
+          <label>
+            <span>Code</span>
+            <input type="text" id="cpnCode" placeholder="WELCOME99" maxlength="20" required style="text-transform:uppercase">
+          </label>
+          <label>
+            <span>Discount Type</span>
+            <select id="cpnType">
+              <option value="percent">% off</option>
+              <option value="flat">₹ off</option>
+            </select>
+          </label>
+          <label>
+            <span>Discount Value</span>
+            <input type="number" id="cpnValue" placeholder="e.g. 20" min="1" max="9999" required>
+          </label>
+          <label>
+            <span>Minimum Order (₹)</span>
+            <input type="number" id="cpnMinOrder" placeholder="0" min="0">
+          </label>
+          <label>
+            <span>Usage Limit</span>
+            <input type="number" id="cpnUsageLimit" placeholder="0 = unlimited" min="0">
+          </label>
+          <label>
+            <span>Expiry Date</span>
+            <input type="date" id="cpnExpiry">
+          </label>
+          <button type="submit" class="btn-neon btn-neon-pink" id="cpnSubmit"><span>Create Coupon</span></button>
+        </form>
+        <p class="coupon-form-error" id="cpnError" hidden></p>
+      </div>
+
+      <div class="table-card">
+        <h2>All Coupons</h2>
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead><tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Usage</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="couponsBody"><tr><td colspan="7" class="table-empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FUNNEL TAB ===== -->
+    <section class="admin-panel" id="panel-funnel">
+      <div class="panel-head">
+        <h1>Conversion Analytics</h1>
+        <div class="range-selector" id="funnelRange" data-current="7d">
+          <button type="button" data-range="today">Today</button>
+          <button type="button" data-range="7d" class="active">7 Days</button>
+          <button type="button" data-range="30d">30 Days</button>
+          <button type="button" data-range="all">All Time</button>
+        </div>
+      </div>
+
+      <div class="funnel-card">
+        <div class="funnel-steps" id="funnelSteps"></div>
+        <div class="funnel-rate-box">
+          <span>Overall Conversion Rate</span>
+          <strong id="funnelConversionRate">0%</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MESSAGES TAB ===== -->
+    <section class="admin-panel" id="panel-messages">
+      <div class="panel-head"><h1>Contact Messages</h1></div>
+      <div class="messages-list" id="messagesList">
+        <p class="table-empty">Loading…</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ FLOATING CALCULATOR ============ -->
+<button type="button" class="calc-fab" id="calcFab" aria-label="Open calculator">🧮</button>
+<div class="calc-panel" id="calcPanel" aria-hidden="true">
+  <div class="calc-head">
+    <span>Calculator</span>
+    <button type="button" id="calcClose" aria-label="Close calculator">✕</button>
+  </div>
+  <div class="calc-display" id="calcDisplay">0</div>
+  <div class="calc-keys" id="calcKeys">
+    <button data-key="C" class="calc-key calc-key-op">C</button>
+    <button data-key="⌫" class="calc-key calc-key-op">⌫</button>
+    <button data-key="%" class="calc-key calc-key-op">%</button>
+    <button data-key="/" class="calc-key calc-key-op">÷</button>
+    <button data-key="7" class="calc-key">7</button>
+    <button data-key="8" class="calc-key">8</button>
+    <button data-key="9" class="calc-key">9</button>
+    <button data-key="*" class="calc-key calc-key-op">×</button>
+    <button data-key="4" class="calc-key">4</button>
+    <button data-key="5" class="calc-key">5</button>
+    <button data-key="6" class="calc-key">6</button>
+    <button data-key="-" class="calc-key calc-key-op">−</button>
+    <button data-key="1" class="calc-key">1</button>
+    <button data-key="2" class="calc-key">2</button>
+    <button data-key="3" class="calc-key">3</button>
+    <button data-key="+" class="calc-key calc-key-op">+</button>
+    <button data-key="0" class="calc-key calc-key-zero">0</button>
+    <button data-key="." class="calc-key">.</button>
+    <button data-key="=" class="calc-key calc-key-equals">=</button>
+  </div>
+</div>
+
+<div class="admin-toast" id="adminToast"></div>
+
+<script src="../config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
