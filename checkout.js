@@ -2,7 +2,8 @@
 /* ============================================
    Checkout modal — Buy Now flow
    Frontend never decides the price; the backend (Railway) recomputes
-   ₹99 × quantity server-side and creates the Cashfree order.
+   ₹99 × quantity (and any coupon discount) server-side and creates the
+   Cashfree order.
 
    FIX APPLIED: backend's /api/orders/create expects firstName and
    lastName as separate fields. This form only has a single "Full Name"
@@ -15,8 +16,10 @@ const Checkout = (() => {
   const DISPLAY_PRICE = 99; // display-only; backend is the source of truth
 
   let overlay, modal, closeBtn, form, nameInput, emailInput, phoneInput,
-      errorEl, totalEl, qtyLabelEl, submitBtn, submitLabel;
+      errorEl, totalEl, qtyLabelEl, submitBtn, submitLabel,
+      couponToggle, couponRow, couponInput, couponApplyBtn, couponMessage;
   let currentQty = 1;
+  let appliedCoupon = null; // { code, discountAmount } | null
   let cashfreeSdkPromise = null;
 
   function cacheEls(){
@@ -32,6 +35,11 @@ const Checkout = (() => {
     qtyLabelEl = document.getElementById('checkoutQtyLabel');
     submitBtn = document.getElementById('checkoutSubmit');
     submitLabel = submitBtn ? submitBtn.querySelector('.checkout-submit-label') : null;
+    couponToggle = document.getElementById('couponToggle');
+    couponRow = document.getElementById('couponRow');
+    couponInput = document.getElementById('couponInput');
+    couponApplyBtn = document.getElementById('couponApplyBtn');
+    couponMessage = document.getElementById('couponMessage');
   }
 
   function formatRupees(n){ return '₹' + n.toLocaleString('en-IN'); }
@@ -63,11 +71,74 @@ const Checkout = (() => {
     return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
   }
 
+  function apiBase(){
+    return (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:3000';
+  }
+
+  function baseAmount(){ return DISPLAY_PRICE * currentQty; }
+
+  function updateTotalDisplay(){
+    if(!totalEl) return;
+    const base = baseAmount();
+    if(appliedCoupon){
+      const final = Math.max(0, base - appliedCoupon.discountAmount);
+      totalEl.innerHTML = `<span class="coupon-strike">${formatRupees(base)}</span> ${formatRupees(final)}`;
+    } else {
+      totalEl.textContent = formatRupees(base);
+    }
+  }
+
+  function resetCouponUI(){
+    appliedCoupon = null;
+    if(couponInput) couponInput.value = '';
+    if(couponRow) couponRow.hidden = true;
+    if(couponMessage){ couponMessage.hidden = true; couponMessage.className = 'coupon-message'; couponMessage.textContent = ''; }
+    if(couponApplyBtn){ couponApplyBtn.disabled = false; couponApplyBtn.textContent = 'Apply'; }
+  }
+
+  async function handleApplyCoupon(){
+    const code = couponInput.value.trim();
+    if(!code){ return; }
+    couponApplyBtn.disabled = true;
+    couponApplyBtn.textContent = 'Checking…';
+    try{
+      const response = await fetch(`${apiBase()}/api/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, amount: baseAmount() })
+      });
+      const data = await response.json();
+      if(data.valid){
+        appliedCoupon = { code: data.code, discountAmount: data.discountAmount };
+        couponMessage.hidden = false;
+        couponMessage.className = 'coupon-message coupon-message--success';
+        couponMessage.textContent = `Coupon applied — you saved ${formatRupees(data.discountAmount)}!`;
+        updateTotalDisplay();
+      } else {
+        appliedCoupon = null;
+        couponMessage.hidden = false;
+        couponMessage.className = 'coupon-message coupon-message--error';
+        couponMessage.textContent = data.error || 'Invalid coupon code.';
+        updateTotalDisplay();
+      }
+    }catch(err){
+      appliedCoupon = null;
+      couponMessage.hidden = false;
+      couponMessage.className = 'coupon-message coupon-message--error';
+      couponMessage.textContent = 'Could not check that coupon right now.';
+      updateTotalDisplay();
+    }finally{
+      couponApplyBtn.disabled = false;
+      couponApplyBtn.textContent = 'Apply';
+    }
+  }
+
   function open(qty){
     if(!overlay) return;
     currentQty = Math.max(1, parseInt(qty, 10) || 1);
     qtyLabelEl.textContent = `${currentQty} ${currentQty > 1 ? 'copies' : 'copy'}`;
-    totalEl.textContent = formatRupees(DISPLAY_PRICE * currentQty);
+    resetCouponUI();
+    updateTotalDisplay();
     hideError();
     setLoading(false);
     form.reset();
@@ -75,6 +146,9 @@ const Checkout = (() => {
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     setTimeout(() => nameInput && nameInput.focus(), 250);
+
+    // Funnel tracking: a checkout was started.
+    if (window.trackEvent) window.trackEvent('checkout_start');
   }
 
   function close(){
@@ -122,11 +196,13 @@ const Checkout = (() => {
 
     setLoading(true);
     try{
-      const base = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:3000';
-      const response = await fetch(`${base}/api/orders/create`, {
+      const response = await fetch(`${apiBase()}/api/orders/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone: phoneDigits, quantity: currentQty })
+        body: JSON.stringify({
+          firstName, lastName, email, phone: phoneDigits, quantity: currentQty,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined
+        })
       });
       const data = await response.json();
       if(!response.ok) throw new Error(data.error || 'Could not start checkout. Please try again.');
@@ -136,7 +212,9 @@ const Checkout = (() => {
       // no further action needed here.
     }catch(err){
       setLoading(false);
-      showError(err.message || 'Something went wrong. Please try again.');
+      const msg = err.message || 'Something went wrong. Please try again.';
+      showError(msg);
+      if (window.showToast) showToast(msg, 'error');
     }
   }
 
@@ -152,6 +230,18 @@ const Checkout = (() => {
     phoneInput.addEventListener('input', () => {
       phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
     });
+    if(couponToggle){
+      couponToggle.addEventListener('click', () => {
+        couponRow.hidden = !couponRow.hidden;
+        if(!couponRow.hidden) couponInput.focus();
+      });
+    }
+    if(couponApplyBtn) couponApplyBtn.addEventListener('click', handleApplyCoupon);
+    if(couponInput){
+      couponInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ e.preventDefault(); handleApplyCoupon(); }
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);

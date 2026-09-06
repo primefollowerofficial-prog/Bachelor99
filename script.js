@@ -70,15 +70,10 @@ mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => 
 
 /* ============================================
    Toast notifications
+   showToast(message, type) now lives in cart-shared.js (loaded before this
+   file) so every page shares the same implementation. Kept no local copy
+   here to avoid the two versions drifting out of sync.
    ============================================ */
-let toastTimer = null;
-function showToast(message){
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-}
 
 /* ============================================
    Scroll-triggered reveal animations
@@ -470,21 +465,24 @@ function initializePurchase(){
 
   document.getElementById('addToCartBtn').addEventListener('click', () => {
     CartStore.add(qty);
-    showToast(`Bachelor 99 has been added to your cart! (${qty} ${qty > 1 ? 'copies' : 'copy'})`);
+    showToast(`Added to cart! (${qty} ${qty > 1 ? 'copies' : 'copy'})`, 'success');
+    if (window.trackEvent) window.trackEvent('buy_click');
   });
   document.getElementById('buyNowBtn').addEventListener('click', () => {
     if(CartStore.getQty() < 1) CartStore.add(qty);
+    if (window.trackEvent) window.trackEvent('buy_click');
     window.location.href = 'cart.html';
   });
   document.getElementById('mpbBuyBtn').addEventListener('click', () => {
     if(CartStore.getQty() < 1) CartStore.add(qty);
+    if (window.trackEvent) window.trackEvent('buy_click');
     window.location.href = 'cart.html';
   });
   document.getElementById('getCookbookBtn').addEventListener('click', () => {
     document.getElementById('product').scrollIntoView({ behavior: 'smooth' });
   });
   document.getElementById('contactBtn').addEventListener('click', () => {
-    showToast("Message sent! We'll get back to you soon.");
+    if (window.ContactWidget) window.ContactWidget.open();
   });
 }
 
@@ -670,7 +668,7 @@ function initializeReviews(){
     });
 
     if(!valid){
-      showToast('Please fill in all fields before submitting.');
+      showToast('Please fill in all fields before submitting.', 'error');
       return;
     }
 
@@ -687,7 +685,7 @@ function initializeReviews(){
     selectedRating = 0;
     starButtons.forEach(b => b.classList.remove('active'));
 
-    showToast('✓ Review added successfully! Thanks for sharing your experience.');
+    showToast('Review added successfully! Thanks for sharing your experience.', 'success');
   });
 }
 
@@ -862,9 +860,14 @@ function initializeMobilePurchaseBar(){
   const trigger = document.getElementById('product');
   if(!trigger) return;
 
+  let viewTracked = false;
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       bar.classList.toggle('visible', !entry.isIntersecting && entry.boundingClientRect.top < 0);
+      if (entry.isIntersecting && !viewTracked) {
+        viewTracked = true;
+        if (window.trackEvent) window.trackEvent('product_view');
+      }
     });
   }, { threshold: 0 });
   observer.observe(trigger);
@@ -874,6 +877,7 @@ function initializeMobilePurchaseBar(){
    Init
    ============================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.trackEvent) window.trackEvent('visit', 'home');
   initializeSearch();
   initializeGallery();
   initializeBeforeAfterSlider();

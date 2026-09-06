@@ -453,6 +453,15 @@
 
       <p class="checkout-error" id="checkoutError" hidden></p>
 
+      <div class="coupon-block">
+        <button type="button" class="coupon-toggle" id="couponToggle">I have a coupon code</button>
+        <div class="coupon-row" id="couponRow" hidden>
+          <input type="text" id="couponInput" placeholder="Enter coupon code" autocomplete="off">
+          <button type="button" class="coupon-apply-btn" id="couponApplyBtn">Apply</button>
+        </div>
+        <p class="coupon-message" id="couponMessage" hidden></p>
+      </div>
+
       <div class="checkout-total-row">
         <span>Total</span>
         <span id="checkoutTotal">₹99</span>

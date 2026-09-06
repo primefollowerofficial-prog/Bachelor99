@@ -50,6 +50,10 @@
     if (window.CartStore) CartStore.clear();
 
     showState('thankyouSuccess');
+
+    // Celebration: confetti burst (~3s) + a quick success toast.
+    if (window.fireConfetti) fireConfetti();
+    if (window.showToast) showToast('Order completed! 🎉', 'success');
   }
 
   async function checkStatus(orderId) {
@@ -73,6 +77,7 @@
 
       if (order.status === 'failed') {
         showState('thankyouFailed');
+        if (window.showToast) showToast('Payment failed. Please try again.', 'error');
         return; // stop polling
       }
 
@@ -99,6 +104,7 @@
 
     if (!orderId) {
       showState('thankyouFailed');
+      if (window.showToast) showToast('We could not find this order.', 'error');
       return;
     }
 
@@ -112,6 +118,13 @@
         pollCount = 0;
         showState('thankyouLoading');
         poll(orderId);
+      });
+    }
+
+    const contactBtn = document.getElementById('tyContactBtn');
+    if (contactBtn) {
+      contactBtn.addEventListener('click', () => {
+        if (window.ContactWidget) window.ContactWidget.open();
       });
     }
   }

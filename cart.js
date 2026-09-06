@@ -66,6 +66,7 @@ function init() {
     removeBtn.addEventListener('click', () => {
       CartStore.clear();
       renderCart();
+      if (window.showToast) showToast('Removed from cart', 'info');
     });
   }
 
