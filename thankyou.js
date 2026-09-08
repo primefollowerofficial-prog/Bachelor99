@@ -49,6 +49,10 @@
     // a pending purchase after a successful payment.
     if (window.CartStore) CartStore.clear();
 
+    // Belt-and-braces: also clear any leftover saved checkout form draft,
+    // in case the browser was closed before checkout.js got to clear it.
+    try { localStorage.removeItem('b99_checkout_draft'); } catch (err) { /* ignore */ }
+
     showState('thankyouSuccess');
 
     // Celebration: confetti burst (~3s) + a quick success toast.

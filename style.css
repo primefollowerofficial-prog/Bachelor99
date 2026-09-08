@@ -630,6 +630,22 @@ ul{ list-style:none; margin:0; padding:0; }
 .mobile-purchase-bar .btn{ padding: 10px 24px; }
 @media (max-width: 720px){ .mobile-purchase-bar{ display:flex; } }
 
+/* On mobile, once the sticky purchase bar slides into view it sits at
+   bottom:0 and was overlapping the chat + contact floating buttons,
+   which also sit near the bottom. Lift both FABs above the bar's
+   height whenever it's visible so nothing overlaps. */
+@media (max-width: 720px){
+  body:has(.mobile-purchase-bar.visible) .chat-fab{
+    bottom: 90px;
+  }
+  body:has(.mobile-purchase-bar.visible) .contact-fab{
+    bottom: 90px;
+  }
+  body:has(.mobile-purchase-bar.visible) .chat-panel{
+    bottom: 162px;
+  }
+}
+
 /* ============================================
    Chat widget
    ============================================ */

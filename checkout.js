@@ -24,6 +24,37 @@ const Checkout = (() => {
   let emailVerified = false;
   let verifiedEmail = null;
 
+  // ---------------- Draft persistence ----------------
+  // Saves whatever the user has typed so an accidental close (backdrop
+  // click, Escape, browser back) doesn't wipe out a filled form. Cleared
+  // once an order is successfully created (payment is about to start).
+  const DRAFT_KEY = 'b99_checkout_draft';
+
+  function saveDraft(){
+    try{
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        name: nameInput ? nameInput.value : '',
+        email: emailInput ? emailInput.value : '',
+        phone: phoneInput ? phoneInput.value : '',
+        emailVerified,
+        verifiedEmail
+      }));
+    }catch(err){ /* localStorage unavailable — silently skip */ }
+  }
+
+  function loadDraft(){
+    try{
+      const raw = localStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function clearDraft(){
+    try{ localStorage.removeItem(DRAFT_KEY); }catch(err){ /* ignore */ }
+  }
+
   function cacheEls(){
     overlay = document.getElementById('checkoutOverlay');
     modal = overlay ? overlay.querySelector('.checkout-modal') : null;
@@ -157,6 +188,7 @@ const Checkout = (() => {
       showVerifyMessage('Verified successfully', 'success');
       emailVerifyBtn.textContent = 'Verified';
       emailVerifyBtn.disabled = true;
+      saveDraft();
     }catch(err){
       showVerifyMessage(err.message || 'Incorrect code. Please try again.', 'error');
     }finally{
@@ -237,6 +269,27 @@ const Checkout = (() => {
     hideError();
     setLoading(false);
     form.reset();
+
+    // Restore anything the user had typed before an accidental close.
+    const draft = loadDraft();
+    if(draft){
+      if(nameInput && draft.name) nameInput.value = draft.name;
+      if(emailInput && draft.email) emailInput.value = draft.email;
+      if(phoneInput && draft.phone) phoneInput.value = draft.phone;
+      // Only restore the "verified" badge if it's still the same email —
+      // the backend independently re-checks this at order time regardless.
+      if(draft.emailVerified && draft.verifiedEmail && draft.verifiedEmail === draft.email){
+        emailVerified = true;
+        verifiedEmail = draft.verifiedEmail;
+        if(otpRow) otpRow.hidden = true;
+        if(emailVerifyBtn){
+          emailVerifyBtn.textContent = 'Verified';
+          emailVerifyBtn.disabled = true;
+        }
+        showVerifyMessage('Verified successfully', 'success');
+      }
+    }
+
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
@@ -315,6 +368,10 @@ const Checkout = (() => {
       const data = await response.json();
       if(!response.ok) throw new Error(data.error || 'Could not start checkout. Please try again.');
 
+      // Order created successfully — the user is heading to Cashfree next,
+      // so there's no more need to keep a local draft around.
+      clearDraft();
+
       await startCashfreeCheckout(data.paymentSessionId, data.mode);
     }catch(err){
       setLoading(false);
@@ -335,6 +392,7 @@ const Checkout = (() => {
     form.addEventListener('submit', handleSubmit);
     phoneInput.addEventListener('input', () => {
       phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+      saveDraft();
     });
 
     // If the user edits the email after verifying, require re-verification.
@@ -342,7 +400,10 @@ const Checkout = (() => {
       if(emailVerified && emailInput.value.trim() !== verifiedEmail){
         resetEmailVerification();
       }
+      saveDraft();
     });
+
+    nameInput.addEventListener('input', saveDraft);
 
     if(emailVerifyBtn) emailVerifyBtn.addEventListener('click', handleEmailVerifyClick);
     if(otpVerifyBtn) otpVerifyBtn.addEventListener('click', handleOtpVerifyClick);
