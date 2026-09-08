@@ -99,10 +99,19 @@
         <span>Full Name</span>
         <input type="text" id="checkoutName" name="customerName" autocomplete="name" required placeholder="e.g. Rahul Sharma">
       </label>
-      <label class="checkout-field">
-        <span>Email Address</span>
-        <input type="email" id="checkoutEmail" name="email" autocomplete="email" required placeholder="you@example.com">
-      </label>
+<label class="checkout-field">
+  <span>Email Address</span>
+  <div class="email-verify-row">
+    <input type="email" id="checkoutEmail" name="email" autocomplete="email" required placeholder="you@example.com">
+    <button type="button" class="email-verify-btn" id="emailVerifyBtn">Verify</button>
+  </div>
+  <div class="otp-row" id="otpRow" hidden>
+    <input type="text" id="otpInput" placeholder="Enter OTP" inputmode="numeric" maxlength="6" autocomplete="off">
+    <button type="button" class="otp-verify-btn" id="otpVerifyBtn">Verify OTP</button>
+  </div>
+  <p class="email-verify-message" id="emailVerifyMessage" hidden></p>
+</label>
+ 
       <label class="checkout-field">
         <span>Phone Number</span>
         <input type="tel" id="checkoutPhone" name="phone" autocomplete="tel" required placeholder="10-digit mobile number" inputmode="numeric" maxlength="10">

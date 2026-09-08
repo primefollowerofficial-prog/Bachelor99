@@ -1223,3 +1223,31 @@ html, body{ max-width: 100%; overflow-x: hidden; }
   transition: background .2s var(--ease), color .2s var(--ease);
 }
 .btn-help-contact:hover{ background: var(--navy); color:#fff; }
+
+
+
+
+/* ============================================
+   ADD THESE RULES TO style.css
+   (Email verify + OTP UI in the checkout modal)
+   ============================================ */
+
+.email-verify-row{display:flex; gap:8px; align-items:center;}
+.email-verify-row input{flex:1;}
+.email-verify-btn{
+  flex-shrink:0; padding:0 14px; height:100%; border-radius:8px; border:none;
+  background:#22C55E; color:#fff; font-weight:600; font-size:13px; cursor:pointer;
+}
+.email-verify-btn:disabled{opacity:.6; cursor:not-allowed;}
+
+.otp-row{display:flex; gap:8px; margin-top:8px;}
+.otp-row input{flex:1;}
+.otp-verify-btn{
+  flex-shrink:0; padding:0 14px; border-radius:8px; border:none;
+  background:#149FE3; color:#fff; font-weight:600; font-size:13px; cursor:pointer;
+}
+.otp-verify-btn:disabled{opacity:.6; cursor:not-allowed;}
+
+.email-verify-message{margin-top:6px; font-size:13px; font-weight:600;}
+.email-verify-message--success{color:#22C55E;}
+.email-verify-message--error{color:#E11D48;}

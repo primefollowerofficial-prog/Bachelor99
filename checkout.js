@@ -5,22 +5,24 @@
    ₹99 × quantity (and any coupon discount) server-side and creates the
    Cashfree order.
 
-   FIX APPLIED: backend's /api/orders/create expects firstName and
-   lastName as separate fields. This form only has a single "Full Name"
-   input, so we split it here before sending: first word -> firstName,
-   the rest -> lastName. If there's no space (single word name),
-   the same word is used for both so the backend's "lastName required"
-   check still passes.
+   Email verification (Brevo OTP) added: user must verify their email
+   before Buy Now will submit. Verification state resets if the user
+   edits the email after verifying.
    ============================================ */
 const Checkout = (() => {
   const DISPLAY_PRICE = 99; // display-only; backend is the source of truth
 
   let overlay, modal, closeBtn, form, nameInput, emailInput, phoneInput,
       errorEl, totalEl, qtyLabelEl, submitBtn, submitLabel,
-      couponToggle, couponRow, couponInput, couponApplyBtn, couponMessage;
+      couponToggle, couponRow, couponInput, couponApplyBtn, couponMessage,
+      emailVerifyBtn, otpRow, otpInput, otpVerifyBtn, emailVerifyMessage;
   let currentQty = 1;
   let appliedCoupon = null; // { code, discountAmount } | null
   let cashfreeSdkPromise = null;
+
+  // Email verification state
+  let emailVerified = false;
+  let verifiedEmail = null;
 
   function cacheEls(){
     overlay = document.getElementById('checkoutOverlay');
@@ -40,6 +42,12 @@ const Checkout = (() => {
     couponInput = document.getElementById('couponInput');
     couponApplyBtn = document.getElementById('couponApplyBtn');
     couponMessage = document.getElementById('couponMessage');
+
+    emailVerifyBtn = document.getElementById('emailVerifyBtn');
+    otpRow = document.getElementById('otpRow');
+    otpInput = document.getElementById('otpInput');
+    otpVerifyBtn = document.getElementById('otpVerifyBtn');
+    emailVerifyMessage = document.getElementById('emailVerifyMessage');
   }
 
   function formatRupees(n){ return '₹' + n.toLocaleString('en-IN'); }
@@ -62,18 +70,102 @@ const Checkout = (() => {
     if(submitLabel) submitLabel.textContent = isLoading ? 'Processing…' : 'BUY NOW';
   }
 
-  // Splits "John Smith" -> { firstName: "John", lastName: "Smith" }
-  // Splits "Cher" -> { firstName: "Cher", lastName: "Cher" } (backend requires both)
-  function splitName(fullName){
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return { firstName: '', lastName: '' };
-    if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
-    return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
-  }
-
   function apiBase(){
     return (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:3000';
   }
+
+  function isValidEmail(email){
+    return /^\S+@\S+\.\S+$/.test(email);
+  }
+
+  /* ---------------- Email OTP verification ---------------- */
+
+  function showVerifyMessage(msg, type){
+    if(!emailVerifyMessage) return;
+    emailVerifyMessage.textContent = msg;
+    emailVerifyMessage.hidden = false;
+    emailVerifyMessage.className = `email-verify-message email-verify-message--${type}`;
+  }
+  function hideVerifyMessage(){
+    if(!emailVerifyMessage) return;
+    emailVerifyMessage.hidden = true;
+    emailVerifyMessage.textContent = '';
+  }
+
+  function resetEmailVerification(){
+    emailVerified = false;
+    verifiedEmail = null;
+    if(otpRow) otpRow.hidden = true;
+    if(otpInput) otpInput.value = '';
+    hideVerifyMessage();
+    if(emailVerifyBtn){
+      emailVerifyBtn.disabled = false;
+      emailVerifyBtn.textContent = 'Verify';
+    }
+  }
+
+  async function handleEmailVerifyClick(){
+    const email = emailInput.value.trim();
+    if(!isValidEmail(email)){
+      showVerifyMessage('Please enter a valid email address first.', 'error');
+      return;
+    }
+    emailVerifyBtn.disabled = true;
+    emailVerifyBtn.textContent = 'Sending…';
+    hideVerifyMessage();
+    try{
+      const response = await fetch(`${apiBase()}/api/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if(!response.ok) throw new Error(data.error || 'Could not send verification code.');
+
+      otpRow.hidden = false;
+      otpInput.focus();
+      showVerifyMessage('OTP sent to your email.', 'success');
+    }catch(err){
+      showVerifyMessage(err.message || 'Could not send verification code.', 'error');
+    }finally{
+      emailVerifyBtn.disabled = false;
+      emailVerifyBtn.textContent = 'Verify';
+    }
+  }
+
+  async function handleOtpVerifyClick(){
+    const email = emailInput.value.trim();
+    const otp = otpInput.value.trim();
+    if(!otp){
+      showVerifyMessage('Please enter the OTP.', 'error');
+      return;
+    }
+    otpVerifyBtn.disabled = true;
+    otpVerifyBtn.textContent = 'Verifying…';
+    try{
+      const response = await fetch(`${apiBase()}/api/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      const data = await response.json();
+      if(!response.ok || !data.verified) throw new Error(data.error || 'Incorrect code.');
+
+      emailVerified = true;
+      verifiedEmail = email;
+      otpRow.hidden = true;
+      showVerifyMessage('Verified successfully', 'success');
+      emailVerifyBtn.textContent = 'Verified';
+      emailVerifyBtn.disabled = true;
+    }catch(err){
+      showVerifyMessage(err.message || 'Incorrect code. Please try again.', 'error');
+    }finally{
+      otpVerifyBtn.disabled = false;
+      otpVerifyBtn.textContent = 'Verify OTP';
+    }
+  }
+
+  /* ---------------- Coupons ---------------- */
 
   function baseAmount(){ return DISPLAY_PRICE * currentQty; }
 
@@ -133,11 +225,14 @@ const Checkout = (() => {
     }
   }
 
+  /* ---------------- Modal open/close ---------------- */
+
   function open(qty){
     if(!overlay) return;
     currentQty = Math.max(1, parseInt(qty, 10) || 1);
     qtyLabelEl.textContent = `${currentQty} ${currentQty > 1 ? 'copies' : 'copy'}`;
     resetCouponUI();
+    resetEmailVerification();
     updateTotalDisplay();
     hideError();
     setLoading(false);
@@ -180,6 +275,14 @@ const Checkout = (() => {
     });
   }
 
+  // Splits "John Smith" -> { firstName: "John", lastName: "Smith" }
+  function splitName(fullName){
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return { firstName: '', lastName: '' };
+    if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
+    return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
+  }
+
   async function handleSubmit(e){
     e.preventDefault();
     hideError();
@@ -189,8 +292,13 @@ const Checkout = (() => {
     const phoneDigits = phoneInput.value.replace(/\D/g, '');
 
     if(!fullName){ return showError('Please enter your full name.'); }
-    if(!/^\S+@\S+\.\S+$/.test(email)){ return showError('Please enter a valid email address.'); }
+    if(!isValidEmail(email)){ return showError('Please enter a valid email address.'); }
     if(phoneDigits.length !== 10){ return showError('Please enter a valid 10-digit phone number.'); }
+
+    // Block submission until the current email has been OTP-verified.
+    if(!emailVerified || verifiedEmail !== email){
+      return showError('Please verify your email first.');
+    }
 
     const { firstName, lastName } = splitName(fullName);
 
@@ -208,8 +316,6 @@ const Checkout = (() => {
       if(!response.ok) throw new Error(data.error || 'Could not start checkout. Please try again.');
 
       await startCashfreeCheckout(data.paymentSessionId, data.mode);
-      // On success, Cashfree's SDK navigates the browser to the return_url —
-      // no further action needed here.
     }catch(err){
       setLoading(false);
       const msg = err.message || 'Something went wrong. Please try again.';
@@ -230,6 +336,22 @@ const Checkout = (() => {
     phoneInput.addEventListener('input', () => {
       phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
     });
+
+    // If the user edits the email after verifying, require re-verification.
+    emailInput.addEventListener('input', () => {
+      if(emailVerified && emailInput.value.trim() !== verifiedEmail){
+        resetEmailVerification();
+      }
+    });
+
+    if(emailVerifyBtn) emailVerifyBtn.addEventListener('click', handleEmailVerifyClick);
+    if(otpVerifyBtn) otpVerifyBtn.addEventListener('click', handleOtpVerifyClick);
+    if(otpInput){
+      otpInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ e.preventDefault(); handleOtpVerifyClick(); }
+      });
+    }
+
     if(couponToggle){
       couponToggle.addEventListener('click', () => {
         couponRow.hidden = !couponRow.hidden;
@@ -249,8 +371,4 @@ const Checkout = (() => {
   return { open, close };
 })();
 
-// Top-level `const` does NOT attach to `window` automatically in classic
-// scripts — cart.js checks `window.Checkout` before calling .open(), so
-// without this line, Buy Now on cart.html silently does nothing (no error,
-// the check just always evaluates false).
 window.Checkout = Checkout;
