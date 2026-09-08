@@ -471,12 +471,15 @@ function initializePurchase(){
   document.getElementById('buyNowBtn').addEventListener('click', () => {
     if(CartStore.getQty() < 1) CartStore.add(qty);
     if (window.trackEvent) window.trackEvent('buy_click');
-    window.location.href = 'cart.html';
+    // Open the checkout modal directly instead of sending the user to
+    // cart.html first — checkout.js + the modal markup already live on
+    // this page, so there's no need for the extra hop.
+    if (window.Checkout) window.Checkout.open(CartStore.getQty());
   });
   document.getElementById('mpbBuyBtn').addEventListener('click', () => {
     if(CartStore.getQty() < 1) CartStore.add(qty);
     if (window.trackEvent) window.trackEvent('buy_click');
-    window.location.href = 'cart.html';
+    if (window.Checkout) window.Checkout.open(CartStore.getQty());
   });
   document.getElementById('getCookbookBtn').addEventListener('click', () => {
     document.getElementById('product').scrollIntoView({ behavior: 'smooth' });
