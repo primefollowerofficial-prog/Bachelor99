@@ -315,7 +315,7 @@ function initializeBeforeAfterSlider(){
   const divider = document.getElementById('baDivider');
   const handle = document.getElementById('baHandle');
 
-  let percent = 100; // starts with the "before" image fully visible
+  let percent = 50; // starts centered so both Before and After are visible on load
   let isDragging = false;
 
   function syncFrameWidth(){
@@ -376,7 +376,7 @@ function initializeBeforeAfterSlider(){
 
   window.addEventListener('resize', syncFrameWidth, { passive: true });
   syncFrameWidth();
-  setPercent(100);
+  setPercent(50);
 }
 
 /* ============================================
@@ -513,6 +513,8 @@ function initializeAccordions(){
 function initializeCountdown(){
   const STORAGE_KEY = 'bachelor99_sale_end';
   const DURATION_MS = 24 * 60 * 60 * 1000;
+  const RESTART_DELAY_MS = 60 * 1000; // how long "Offer expired" stays up before a fresh 24h timer begins
+
   let endTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
 
   if(!endTime || isNaN(endTime)){
@@ -528,19 +530,31 @@ function initializeCountdown(){
 
   function pad(n){ return String(n).padStart(2, '0'); }
 
-  let intervalId;
+  function restart(){
+    endTime = Date.now() + DURATION_MS;
+    localStorage.setItem(STORAGE_KEY, String(endTime));
+    box.classList.remove('expired');
+    label.textContent = '🔥 SALE ENDS SOON';
+  }
 
   function update(){
-    const remaining = Math.max(0, endTime - Date.now());
+    const remaining = endTime - Date.now();
+
     if(remaining <= 0){
       hoursEl.textContent = '00';
       minsEl.textContent = '00';
       secsEl.textContent = '00';
       box.classList.add('expired');
       label.textContent = 'Offer expired';
-      if (intervalId) clearInterval(intervalId);
+
+      // Once the "expired" state has shown for RESTART_DELAY_MS,
+      // kick off a brand new 24h countdown automatically.
+      if (Date.now() - endTime >= RESTART_DELAY_MS) {
+        restart();
+      }
       return;
     }
+
     const totalSeconds = Math.floor(remaining / 1000);
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
@@ -551,7 +565,7 @@ function initializeCountdown(){
   }
 
   update();
-  intervalId = setInterval(update, 1000);
+  setInterval(update, 1000);
 }
 
 /* ============================================

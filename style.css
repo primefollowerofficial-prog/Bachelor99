@@ -527,6 +527,7 @@ ul{ list-style:none; margin:0; padding:0; }
 .testimonial-carousel{ display:flex; align-items:center; gap: 16px; }
 .testimonial-track{
   display:flex; gap: 20px; overflow:hidden; flex:1; scroll-behavior: smooth;
+  padding: 10px 2px 14px;
 }
 .t-card{
   flex: 0 0 calc((100% - 40px)/3);
