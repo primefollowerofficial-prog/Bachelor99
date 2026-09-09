@@ -13,15 +13,15 @@ const testimonialData = [
 ];
 
 const reviewsData = [
-  { title: 'MUST BUY', body: "I never thought I could make something that looks like the pictures but the step by step guide in this Bachelor 99 book is so simple. The paneer recipes are my favorite so far, really delicious and fast.", name: 'Siddharth Rao', city: 'Bangalore' },
-  { title: 'Decent for the price', body: "Good variety of dishes for someone starting out. The cost estimation is mostly accurate for Delhi prices, though some ingredients are a bit more now. Still way cheaper than eating out every night.", name: 'Arjun Mehta', city: 'Delhi' },
-  { title: 'Surprisingly useful', body: "Downloaded this expecting a basic PDF and got an actual organized cookbook. The equipment list before each recipe means I know exactly what I need before I start.", name: 'Farhan Ali', city: 'Hyderabad' },
-  { title: 'Perfect for beginners', body: "I genuinely did not know how to cook rice properly before this. Every recipe explains the why, not just the steps, which helped me understand cooking instead of just following instructions blindly.", name: 'Neha Kulkarni', city: 'Pune' },
-  { title: 'Actually saved me money', body: "Tracked my food spending for a month before and after. Cut my monthly food budget by almost a third once I stopped ordering in every other day.", name: 'Rahul Iyer', city: 'Chennai' },
-  { title: 'Simple and practical', body: "No fancy plating nonsense, no ingredients I've never heard of. Just real meals a busy person can actually make on a weeknight.", name: 'Devansh Gupta', city: 'Mumbai' },
-  { title: 'Better than expected', body: "Was skeptical for ₹99 but the recipes are genuinely well tested. Tried the soya chunks curry and it came out exactly like the photo, which never happens for me.", name: 'Aryan Kapoor', city: 'Ahmedabad' },
-  { title: 'Great for lazy cooks', body: "Most recipes are under 30 minutes which is exactly what I needed after long shifts. The chicken curry recipe alone was worth the price.", name: 'Manish Verma', city: 'Kolkata' },
-  { title: 'Worth downloading', body: "Clean layout, easy to read on my phone while cooking. Wish there were a few more vegetarian options but overall very happy with the purchase.", name: 'Sameer Joshi', city: 'Jaipur' }
+  { title: 'MUST BUY', body: "I never thought I could make something that looks like the pictures but the step by step guide in this Bachelor 99 book is so simple. The paneer recipes are my favorite so far, really delicious and fast.", name: 'Siddharth Rao', city: 'Bangalore', rating: 5 },
+  { title: 'Decent for the price', body: "Good variety of dishes for someone starting out. The cost estimation is mostly accurate for Delhi prices, though some ingredients are a bit more now. Still way cheaper than eating out every night.", name: 'Arjun Mehta', city: 'Delhi', rating: 4 },
+  { title: 'Surprisingly useful', body: "Downloaded this expecting a basic PDF and got an actual organized cookbook. The equipment list before each recipe means I know exactly what I need before I start.", name: 'Farhan Ali', city: 'Hyderabad', rating: 5 },
+  { title: 'Perfect for beginners', body: "I genuinely did not know how to cook rice properly before this. Every recipe explains the why, not just the steps, which helped me understand cooking instead of just following instructions blindly.", name: 'Neha Kulkarni', city: 'Pune', rating: 5 },
+  { title: 'Actually saved me money', body: "Tracked my food spending for a month before and after. Cut my monthly food budget by almost a third once I stopped ordering in every other day.", name: 'Rahul Iyer', city: 'Chennai', rating: 5 },
+  { title: 'Simple and practical', body: "No fancy plating nonsense, no ingredients I've never heard of. Just real meals a busy person can actually make on a weeknight.", name: 'Devansh Gupta', city: 'Mumbai', rating: 4 },
+  { title: 'Better than expected', body: "Was skeptical for ₹99 but the recipes are genuinely well tested. Tried the soya chunks curry and it came out exactly like the photo, which never happens for me.", name: 'Aryan Kapoor', city: 'Ahmedabad', rating: 5 },
+  { title: 'Great for lazy cooks', body: "Most recipes are under 30 minutes which is exactly what I needed after long shifts. The chicken curry recipe alone was worth the price.", name: 'Manish Verma', city: 'Kolkata', rating: 5 },
+  { title: 'Worth downloading', body: "Clean layout, easy to read on my phone while cooking. Wish there were a few more vegetarian options but overall very happy with the purchase.", name: 'Sameer Joshi', city: 'Jaipur', rating: 3 }
 ];
 
 const faqData = [
@@ -582,6 +582,26 @@ function initializeTestimonials(){
 }
 
 /* ============================================
+   Overall rating (kept identical everywhere it appears)
+   Randomly 4.7 or 4.8 with a 50/50 chance, chosen ONCE and persisted
+   in localStorage so it never flips between reloads or differs between
+   the hero, search result, and reviews section on the same visit.
+   ============================================ */
+function initializeOverallRating(){
+  const STORAGE_KEY = 'b99_overall_rating';
+  let rating = localStorage.getItem(STORAGE_KEY);
+
+  if (rating !== '4.7' && rating !== '4.8') {
+    rating = Math.random() < 0.5 ? '4.7' : '4.8';
+    localStorage.setItem(STORAGE_KEY, rating);
+  }
+
+  document.querySelectorAll('.overall-rating').forEach(el => {
+    el.textContent = rating;
+  });
+}
+
+/* ============================================
    Review counter — starts at 113, +1 every
    completed hour, persisted via localStorage
    ============================================ */
@@ -621,14 +641,19 @@ function initializeReviews(){
   const list = document.getElementById('reviewsList');
 
   function renderReviews(){
-    list.innerHTML = reviewsData.map(r => `
+    list.innerHTML = reviewsData.map(r => {
+      const rating = Math.min(5, Math.max(1, parseInt(r.rating, 10) || 5));
+      const filled = '★'.repeat(rating);
+      const empty = '☆'.repeat(5 - rating);
+      return `
       <div class="review-item" data-reveal>
-        <span class="stars" aria-hidden="true">★★★★★</span>
+        <span class="stars" aria-hidden="true"><span class="stars-filled">${filled}</span><span class="stars-empty">${empty}</span></span>
         <h4>${escapeHTML(r.title)}</h4>
         <p>${escapeHTML(r.body)}</p>
         <p class="rev-meta">${escapeHTML(r.name)} — ${escapeHTML(r.city)}</p>
       </div>
-    `).join('');
+    `;
+    }).join('');
     // Re-observe newly injected reveal items
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -682,7 +707,8 @@ function initializeReviews(){
       title: title.value.trim(),
       body: body.value.trim(),
       name: name.value.trim(),
-      city: 'Your City'
+      city: 'Your City',
+      rating: selectedRating > 0 ? selectedRating : 5
     });
     renderReviews();
 
@@ -890,6 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializePurchase();
   initializeAccordions();
   initializeCountdown();
+  initializeOverallRating();
   initializeTestimonials();
   initializeReviews();
   initializeReviewCounter();
