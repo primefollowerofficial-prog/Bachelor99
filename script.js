@@ -528,6 +528,8 @@ function initializeCountdown(){
 
   function pad(n){ return String(n).padStart(2, '0'); }
 
+  let intervalId;
+
   function update(){
     const remaining = Math.max(0, endTime - Date.now());
     if(remaining <= 0){
@@ -536,7 +538,7 @@ function initializeCountdown(){
       secsEl.textContent = '00';
       box.classList.add('expired');
       label.textContent = 'Offer expired';
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
       return;
     }
     const totalSeconds = Math.floor(remaining / 1000);
@@ -549,7 +551,7 @@ function initializeCountdown(){
   }
 
   update();
-  const intervalId = setInterval(update, 1000);
+  intervalId = setInterval(update, 1000);
 }
 
 /* ============================================
